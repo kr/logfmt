@@ -74,8 +74,7 @@ func (s *scanner) scan() ([]*token, error) {
 func (s *scanner) next() {
 	s.i += s.n
 	if s.i == len(s.b) {
-		s.r = -1
-		s.n = 0
+		s.r, s.n = -1, 0
 		return
 	}
 	s.r, s.n = utf8.DecodeRune(s.b[s.i:])
