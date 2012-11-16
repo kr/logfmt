@@ -36,28 +36,36 @@ func Unmarshal(b []byte, x map[string]interface{}) error {
 	panic("not yet")
 }
 
+func newScanner(b []byte) *scanner {
+	return &scanner{b: b, r: ' '}
+}
+
 func (s *scanner) scan() ([]*token, error) {
 	var t []*token
 	for {
-		s.next()
-		switch {
-		case unicode.IsSpace(s.r):
-			continue
-		case s.r == '"':
-			s.next()
-			tk, err := s.scanString()
-			if err != nil {
-				return nil, err
-			}
-			t = append(t, tk)
-		case s.r == '=':
-			t = append(t, &token{tokenEqual, nil})
-		case unicode.IsDigit(s.r):
+		s.skipWhitespace()
+
+		switch r := s.r; {
+		case unicode.IsDigit(r):
 			t = append(t, s.scanNumber())
-		case unicode.IsLetter(s.r):
+		case unicode.IsLetter(r):
 			t = append(t, s.scanIdent())
 		default:
-			return nil, ErrInvalidToken
+			s.next()
+			switch r {
+			case -1:
+				return t, nil
+			case '"':
+				tk, err := s.scanString()
+				if err != nil {
+					return nil, err
+				}
+				t = append(t, tk)
+			case '=':
+				t = append(t, &token{tokenEqual, nil})
+			default:
+				return nil, ErrInvalidToken
+			}
 		}
 	}
 	return t, nil
@@ -74,8 +82,15 @@ func (s *scanner) next() {
 	return
 }
 
+func (s *scanner) skipWhitespace() {
+	for unicode.IsSpace(s.r) {
+		s.next()
+	}
+}
+
 func (s *scanner) scanString() (*token, error) {
 	m := s.i - 1
+	s.next()
 	for s.r != '"' {
 		r := s.r
 		s.next()
@@ -117,7 +132,7 @@ func (s *scanner) scanIdent() *token {
 }
 
 func TestScanString(t *testing.T) {
-	s := &scanner{b: []byte(`"foo"`)}
+	s := newScanner([]byte(`"foo\"bar"`))
 	s.next()
 	if s.r != '"' {
 		t.Errorf(`want '"', got %c`, s.r)
@@ -130,14 +145,14 @@ func TestScanString(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := &token{tokenString, []byte(`"foo"`)}
+	w := &token{tokenString, []byte(`"foo\"bar"`)}
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
 }
 
 func TestScanIdent(t *testing.T) {
-	s := &scanner{b: []byte(`ƒoo`)}
+	s := newScanner([]byte(`ƒoo`))
 	s.next()
 	g := s.scanIdent()
 	w := &token{tokenIdent, []byte(`ƒoo`)}
@@ -147,7 +162,7 @@ func TestScanIdent(t *testing.T) {
 }
 
 func TestScanNumber(t *testing.T) {
-	s := &scanner{b: []byte(`123`)}
+	s := newScanner([]byte(`123`))
 	s.next()
 	g := s.scanNumber()
 	w := &token{tokenNumber, []byte(`123`)}
@@ -157,7 +172,7 @@ func TestScanNumber(t *testing.T) {
 }
 
 func TestNext(t *testing.T) {
-	s := &scanner{b: []byte("ƒun")}
+	s := newScanner([]byte("ƒun"))
 	ws := []struct {
 		r rune
 		n int
@@ -180,30 +195,30 @@ func TestNext(t *testing.T) {
 	}
 }
 
-// func TestParse(t *testing.T) {
-// 	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
-// 	w := []*token{
-// 		{tokenString, []byte(`a`)},
-// 		{tokenEqual, nil},
-// 		{tokenNumber, []byte("1")},
-// 
-// 		{tokenString, []byte("b")},
-// 		{tokenEqual, nil},
-// 		{tokenString, []byte(`"2"`)},
-// 
-// 		{tokenString, []byte("c")},
-// 		{tokenEqual, nil},
-// 		{tokenString, []byte(`"3\" 4"`)},
-// 
-// 		{tokenString, []byte(`"d"`)},
-// 		{tokenEqual, nil},
-// 		{tokenString, []byte(`b33s`)},
-// 	}
-// 	g, err := (&scanner{b: data}).scan()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if !reflect.DeepEqual(w, g) {
-// 		t.Errorf("want %#v, got %#v", w, g)
-// 	}
-// }
+func TestScan(t *testing.T) {
+	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
+	w := []*token{
+		{tokenIdent, []byte(`a`)},
+		{tokenEqual, nil},
+		{tokenNumber, []byte("1")},
+
+		{tokenIdent, []byte("b")},
+		{tokenEqual, nil},
+		{tokenString, []byte(`"2"`)},
+
+		{tokenIdent, []byte("c")},
+		{tokenEqual, nil},
+		{tokenString, []byte(`"3\" 4"`)},
+
+		{tokenString, []byte(`"d"`)},
+		{tokenEqual, nil},
+		{tokenIdent, []byte(`b33s`)},
+	}
+	g, err := newScanner(data).scan()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(w, g) {
+		t.Errorf("want\n%q,\ngot\n%q", w, g)
+	}
+}
