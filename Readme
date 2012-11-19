@@ -1,0 +1,8 @@
+Go package for parsing (and, eventually, generating)
+log lines in the logfmt style.
+
+The format is loosely described in
+https://gist.github.com/0e8d5ee4b954ce604bb2
+
+See http://go.pkgdoc.org/github.com/kr/logfmt for
+documentation and examples.
