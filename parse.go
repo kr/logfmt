@@ -13,12 +13,23 @@ var (
 	eof = errors.New("EOF")
 )
 
-type parser struct {
-	s *scanner
+func Unmarshal(b []byte, x map[string]interface{}) error {
+	s := newScanner(b)
+	for {
+		key, val, err := next(s)
+		if err != nil {
+			if err == eof {
+				return nil
+			}
+			return err
+		}
+		x[key] = val
+	}
+	return nil
 }
 
-func (p *parser) next() (key string, val interface{}, err error) {
-	tok, err := p.s.nextT()
+func next(s *scanner) (key string, val interface{}, err error) {
+	tok, err := s.nextT()
 	if err != nil {
 		return "", "", err
 	}
@@ -37,7 +48,7 @@ func (p *parser) next() (key string, val interface{}, err error) {
 		return "", "", ErrUnexpectedToken
 	}
 
-	tok, err = p.s.nextT()
+	tok, err = s.nextT()
 	if err != nil {
 		return "", "", err
 	}
@@ -50,7 +61,7 @@ func (p *parser) next() (key string, val interface{}, err error) {
 	}
 
 
-	tok, err = p.s.nextT()
+	tok, err = s.nextT()
 	if err != nil {
 		return "", "", err
 	}
@@ -75,17 +86,3 @@ func (p *parser) next() (key string, val interface{}, err error) {
 	return key, val, nil
 }
 
-func Unmarshal(b []byte, x map[string]interface{}) error {
-	p := &parser{newScanner(b)}
-	for {
-		key, val, err := p.next()
-		if err != nil {
-			if err == eof {
-				return nil
-			}
-			return err
-		}
-		x[key] = val
-	}
-	return nil
-}
