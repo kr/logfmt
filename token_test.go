@@ -46,6 +46,29 @@ func TestTokenInt(t *testing.T) {
 	}
 }
 
+func TestTokenUint(t *testing.T) {
+	tests := []struct {
+		t *token
+		w uint64
+		e error
+	}{
+		{&token{tString, `"1"`}, 1, nil},
+		{&token{tIdent, "true"}, 1, nil},
+		{&token{tIdent, "false"}, 0, nil},
+		{&token{tNumber, "123"}, 123, nil},
+		{&token{tIdent, "null"}, 0, nil},
+	}
+	for _, test := range tests {
+		g, err := test.t.uint(64)
+		if g != test.w {
+			t.Errorf("want %#v, got %#v", test.w, g)
+		}
+		if err != test.e {
+			t.Errorf("want %#v, got %#v", test.e, err)
+		}
+	}
+}
+
 func TestTokenBool(t *testing.T) {
 	tests := []struct {
 		t *token

@@ -80,5 +80,13 @@ func (tok *token) int(bits int) (int64, error) {
 }
 
 func (tok *token) uint(bits int) (uint64, error) {
-	return strconv.ParseUint(string(tok.src), 10, bits)
+	if tok.t == tIdent {
+		switch tok.src {
+		case "true":
+			return 1, nil
+		case "false", "null":
+			return 0, nil
+		}
+	}
+	return strconv.ParseUint(tok.string(), 10, bits)
 }
