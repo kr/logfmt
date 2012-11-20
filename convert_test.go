@@ -45,7 +45,7 @@ func TestConvert(t *testing.T) {
 		t *token
 		w interface{}
 	}{
-		{sv, &token{tString, []byte("foo")}, "foo"},
+		{sv, &token{tString, []byte(`"foo"`)}, "foo"},
 		{sv, &token{tIdent, []byte("true")}, "true"},
 		{sv, &token{tIdent, []byte("false")}, "false"},
 		{sv, &token{tNumber, []byte("1")}, "1"},

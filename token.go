@@ -44,6 +44,10 @@ func (tok *token) isNull() bool {
 }
 
 func (tok *token) string() string {
+	if tok.t == tString {
+		b, _ := unquoteBytes(tok.src)
+		return string(b)
+	}
 	return string(tok.src)
 }
 
