@@ -7,8 +7,8 @@ import (
 
 func TestParse(t *testing.T) {
 	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
-	w := map[string]interface{}{
-		"a": 1,
+	w := map[string]string{
+		"a": "1",
 		"b": "2",
 		"c": "3\" 4",
 		"d": "b33s",

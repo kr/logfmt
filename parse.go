@@ -2,7 +2,6 @@ package logfmt
 
 import (
 	"errors"
-	"strconv"
 )
 
 var (
@@ -12,7 +11,7 @@ var (
 	eof = errors.New("EOF")
 )
 
-func Unmarshal(b []byte, x map[string]interface{}) error {
+func Unmarshal(b []byte, x interface{}) error {
 	s := newScanner(b)
 	for {
 		key, val, err := next(s)
@@ -22,15 +21,17 @@ func Unmarshal(b []byte, x map[string]interface{}) error {
 			}
 			return err
 		}
-		x[key] = val
+		if err := assign(key, x, val); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func next(s *scanner) (key string, val interface{}, err error) {
+func next(s *scanner) (key string, val *token, err error) {
 	tok, err := s.nextT()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	switch tok.t {
 	case tString:
@@ -38,39 +39,32 @@ func next(s *scanner) (key string, val interface{}, err error) {
 	case tIdent:
 		key = tok.src
 	case tEOF:
-		return "", "", eof
+		return "", nil, eof
 	default:
-		return "", "", ErrUnexpectedToken
+		return "", nil, ErrUnexpectedToken
 	}
 
 	tok, err = s.nextT()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	switch tok.t {
 	case tEqual:
 	case tEOF:
-		return "", "", ErrUnexpectedEOF
+		return "", nil, ErrUnexpectedEOF
 	default:
-		return "", "", ErrUnexpectedToken
+		return "", nil, ErrUnexpectedToken
 	}
 
 	tok, err = s.nextT()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	switch tok.t {
-	case tString:
-		val = unquote(tok.src)
-	case tNumber:
-		// We don't need to worry about an error. We know it's a number.
-		val, _ = strconv.Atoi(string(tok.src))
-	case tIdent:
-		val = string(tok.src)
 	case tEOF:
-		return "", "", ErrUnexpectedEOF
+		return "", nil, ErrUnexpectedEOF
 	default:
-		return "", "", ErrUnexpectedToken
+		val = tok
 	}
 
 	return key, val, nil
