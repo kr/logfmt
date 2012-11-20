@@ -14,41 +14,41 @@ var (
 func Unmarshal(b []byte, x interface{}) error {
 	s := newScanner(b)
 	for {
-		key, val, err := nextPair(s)
+		key, v, err := nextPair(s)
 		if err != nil {
 			if err == eof {
 				return nil
 			}
 			return err
 		}
-		if err := assign(key, x, val); err != nil {
+		if err := assign(key, x, v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func nextPair(s *scanner) (key string, val *token, err error) {
-	tok, err := s.scan()
+func nextPair(s *scanner) (key string, v *val, err error) {
+	tok, lit, err := s.scan()
 	if err != nil {
 		return "", nil, err
 	}
-	switch tok.t {
+	switch tok {
 	case tString:
-		key = unquote(tok.src)
+		key = unquote(lit)
 	case tIdent:
-		key = tok.src
+		key = lit
 	case tEOF:
 		return "", nil, eof
 	default:
 		return "", nil, ErrUnexpectedToken
 	}
 
-	tok, err = s.scan()
+	tok, lit, err = s.scan()
 	if err != nil {
 		return "", nil, err
 	}
-	switch tok.t {
+	switch tok {
 	case tEqual:
 	case tEOF:
 		return "", nil, ErrUnexpectedEOF
@@ -56,16 +56,12 @@ func nextPair(s *scanner) (key string, val *token, err error) {
 		return "", nil, ErrUnexpectedToken
 	}
 
-	tok, err = s.scan()
+	tok, lit, err = s.scan()
 	if err != nil {
 		return "", nil, err
 	}
-	switch tok.t {
-	case tEOF:
+	if tok == tEOF {
 		return "", nil, ErrUnexpectedEOF
-	default:
-		val = tok
 	}
-
-	return key, val, nil
+	return key, newVal(tok, lit), nil
 }

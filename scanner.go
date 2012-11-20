@@ -21,26 +21,26 @@ func newScanner(b []byte) *scanner {
 	return &scanner{b: b, r: ' '}
 }
 
-func (s *scanner) scan() (*token, error) {
+func (s *scanner) scan() (token, string, error) {
 	for {
 		s.skipWhitespace()
 
 		switch r := s.r; {
 		case unicode.IsDigit(r):
-			return s.scanNumber(), nil
+			return tNumber, s.scanNumber(), nil
 		case unicode.IsLetter(r):
-			return s.scanIdent(), nil
+			return tIdent, s.scanIdent(), nil
 		default:
 			s.next()
 			switch r {
 			case -1:
-				return &token{tEOF, ""}, nil
+				return tEOF, "", nil
 			case '"':
 				return s.scanString()
 			case '=':
-				return &token{tEqual, ""}, nil
+				return tEqual, "", nil
 			default:
-				return nil, ErrInvalidSyntax
+				return tError, "", ErrInvalidSyntax
 			}
 		}
 	}
@@ -63,21 +63,21 @@ func (s *scanner) skipWhitespace() {
 	}
 }
 
-func (s *scanner) scanString() (*token, error) {
+func (s *scanner) scanString() (token, string, error) {
 	m := s.i - 1
 	s.next()
 	for s.r != '"' {
 		r := s.r
 		s.next()
 		if r == '\n' || r < 0 {
-			return nil, errors.New("unterminated string")
+			return tError, "", errors.New("unterminated string")
 		}
 		if r == '\\' {
 			s.scanEscape()
 		}
 	}
 	s.next()
-	return &token{tString, string(s.b[m:s.i])}, nil
+	return tString, string(s.b[m:s.i]), nil
 }
 
 func (s *scanner) scanEscape() error {
@@ -89,19 +89,19 @@ func (s *scanner) scanEscape() error {
 	return nil
 }
 
-func (s *scanner) scanNumber() *token {
+func (s *scanner) scanNumber() string {
 	// TODO: support 1e9 and fractions
 	m := s.i
 	for unicode.IsDigit(s.r) {
 		s.next()
 	}
-	return &token{tNumber, string(s.b[m:s.i])}
+	return string(s.b[m:s.i])
 }
 
-func (s *scanner) scanIdent() *token {
+func (s *scanner) scanIdent() string {
 	m := s.i
 	for unicode.IsLetter(s.r) || unicode.IsDigit(s.r) {
 		s.next()
 	}
-	return &token{tIdent, string(s.b[m:s.i])}
+	return string(s.b[m:s.i])
 }

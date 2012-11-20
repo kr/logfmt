@@ -15,13 +15,16 @@ func TestScanString(t *testing.T) {
 	if s.r != 'f' {
 		t.Errorf(`want 'f', got %c`, s.r)
 	}
-	g, err := s.scanString()
+	gtok, glit, err := s.scanString()
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := &token{tString, `"foo\"bar"`}
-	if !reflect.DeepEqual(w, g) {
-		t.Errorf("want %q, got %q", w, g)
+	wtok, wlit := tString, `"foo\"bar"`
+	if gtok != wtok {
+		t.Errorf("want %q, got %q", wlit, gtok)
+	}
+	if glit != wlit {
+		t.Errorf("want %q, got %q", wlit, glit)
 	}
 }
 
@@ -29,7 +32,7 @@ func TestScanIdent(t *testing.T) {
 	s := newScanner([]byte(`ƒoo`))
 	s.next()
 	g := s.scanIdent()
-	w := &token{tIdent, `ƒoo`}
+	w := `ƒoo`
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
@@ -39,7 +42,7 @@ func TestScanNumber(t *testing.T) {
 	s := newScanner([]byte(`123`))
 	s.next()
 	g := s.scanNumber()
-	w := &token{tNumber, `123`}
+	w := `123`
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
@@ -71,7 +74,10 @@ func TestNext(t *testing.T) {
 
 func TestScan(t *testing.T) {
 	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
-	want := []*token{
+	want := []struct {
+		tok token
+		lit string
+	}{
 		{tIdent, `a`},
 		{tEqual, ""},
 		{tNumber, "1"},
@@ -90,12 +96,15 @@ func TestScan(t *testing.T) {
 	}
 	s := newScanner(data)
 	for _, w := range want {
-		g, err := s.scan()
+		gtok, glit, err := s.scan()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(w, g) {
-			t.Errorf("want\n%q,\ngot\n%q", w, g)
+		if w.tok != gtok {
+			t.Errorf("want\n%q,\ngot\n%q", w.tok, gtok)
+		}
+		if w.lit != glit {
+			t.Errorf("want\n%q,\ngot\n%q", w.lit, glit)
 		}
 	}
 }

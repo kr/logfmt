@@ -8,7 +8,7 @@ import (
 
 var ErrInvalidType = errors.New("logfmt: invalid type")
 
-func assign(key string, x interface{}, tok *token) error {
+func assign(key string, x interface{}, tok *val) error {
 	switch v := x.(type) {
 	case map[string]string:
 		v[key] = tok.string()
@@ -38,8 +38,8 @@ func assign(key string, x interface{}, tok *token) error {
 }
 
 // assumes dst.CanSet() == true
-func convertAssign(dv reflect.Value, tok *token) error {
-	if tok.isNull() {
+func convertAssign(dv reflect.Value, v *val) error {
+	if v.t == vNull {
 		dv.Set(reflect.Zero(dv.Type()))
 		return nil
 	}
@@ -51,23 +51,23 @@ func convertAssign(dv reflect.Value, tok *token) error {
 
 	switch dv.Kind() {
 	case reflect.String:
-		dv.SetString(tok.string())
+		dv.SetString(v.string())
 		return nil
 	case reflect.Bool:
-		dv.SetBool(tok.bool())
+		dv.SetBool(v.bool())
 		return nil
 	}
 
 	switch {
 	case reflect.Int <= dv.Kind() && dv.Kind() <= reflect.Int64:
-		n, err := tok.int(dv.Type().Bits())
+		n, err := v.int(dv.Type().Bits())
 		if err != nil {
 			return err
 		}
 		dv.SetInt(n)
 		return nil
 	case reflect.Uint <= dv.Kind() && dv.Kind() <= reflect.Uint64:
-		n, err := tok.uint(dv.Type().Bits())
+		n, err := v.uint(dv.Type().Bits())
 		if err != nil {
 			return err
 		}

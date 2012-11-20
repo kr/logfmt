@@ -7,7 +7,7 @@ import (
 
 func TestAssignMap(t *testing.T) {
 	g := make(map[string]interface{})
-	assign("a", g, &token{tNumber, `1`})
+	assign("a", g, &val{vNumber, `1`})
 
 	w := map[string]string{
 		"a": "1",
@@ -25,28 +25,28 @@ func TestAssignStruct(t *testing.T) {
 	}
 
 	x := new(T)
-	assign("A", x, &token{tString, `"foo"`})
+	assign("A", x, &val{vString, "foo"})
 	if x.A != "foo" {
 		t.Errorf("want %#v, got %#v", "foo", x.A)
 	}
 
-	assign("a", x, &token{tString, `"bar"`})
+	assign("a", x, &val{vString, "bar"})
 	if x.A != "bar" {
 		t.Errorf("want %#v, got %#v", "foo", x.A)
 	}
 
 	// This should not set t.B
-	assign("B", x, &token{tString, `"1"`})
+	assign("B", x, &val{vString, "1"})
 	if x.B != 1 {
 		t.Errorf("want %#v, got %#v", 1, x.B)
 	}
 
-	assign("bee", x, &token{tNumber, `2`})
+	assign("bee", x, &val{vNumber, `2`})
 	if x.B != 2 {
 		t.Errorf("want %#v, got %#v", 2, x.B)
 	}
 
-	assign("C", x, &token{tString, `"3"`})
+	assign("C", x, &val{vString, "3"})
 	if x.C != uint32(3) {
 		t.Errorf("want %#v, got %#v", uint32(3), x.C)
 	}
@@ -62,20 +62,20 @@ func TestConvert(t *testing.T) {
 	p := &s
 	tests := []struct {
 		v reflect.Value
-		t *token
+		t *val
 		w interface{}
 	}{
-		{bv, &token{tIdent, "null"}, false},
-		{nv, &token{tIdent, "null"}, 0},
-		{sv, &token{tIdent, "null"}, ""},
-		{sp, &token{tIdent, "null"}, (*string)(nil)},
-		{pp, &token{tIdent, "null"}, (**string)(nil)},
+		{bv, &val{vNull, "null"}, false},
+		{nv, &val{vNull, "null"}, 0},
+		{sv, &val{vNull, "null"}, ""},
+		{sp, &val{vNull, "null"}, (*string)(nil)},
+		{pp, &val{vNull, "null"}, (**string)(nil)},
 
-		{bv, &token{tIdent, "true"}, true},
-		{nv, &token{tNumber, "123"}, 123},
-		{sv, &token{tString, `"foo"`}, s},
-		{sp, &token{tString, `"foo"`}, &s},
-		{pp, &token{tString, `"foo"`}, &p},
+		{bv, &val{vTrue, "true"}, true},
+		{nv, &val{vNumber, "123"}, 123},
+		{sv, &val{vString, "foo"}, s},
+		{sp, &val{vString, "foo"}, &s},
+		{pp, &val{vString, "foo"}, &p},
 	}
 
 	for _, test := range tests {
