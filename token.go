@@ -43,8 +43,13 @@ func (tok *token) isNull() bool {
 }
 
 func (tok *token) string() string {
-	if tok.t == tString {
+	switch tok.t {
+	case tString:
 		return unquote(tok.src)
+	case tIdent:
+		if tok.src == "null" {
+			return ""
+		}
 	}
 	return tok.src
 }
@@ -61,12 +66,6 @@ func (tok *token) bool() bool {
 	}
 	return false
 }
-
-var (
-	identTrue  = []byte("true")
-	identFalse = []byte("false")
-	identNull  = []byte("null")
-)
 
 func (tok *token) int(bits int) (int64, error) {
 	if tok.t == tIdent {
