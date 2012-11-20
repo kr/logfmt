@@ -20,7 +20,7 @@ func TestAssignMap(t *testing.T) {
 func TestAssignStruct(t *testing.T) {
 	type T struct {
 		A string
-		B int
+		B int `logfmt:"bee"`
 		C uint32
 	}
 
@@ -35,14 +35,20 @@ func TestAssignStruct(t *testing.T) {
 		t.Errorf("want %#v, got %#v", "foo", x.A)
 	}
 
+	// This should not set t.B
 	assign("B", x, &token{tString, `"1"`})
 	if x.B != 1 {
 		t.Errorf("want %#v, got %#v", 1, x.B)
 	}
 
-	assign("C", x, &token{tString, `"2"`})
-	if x.B != 1 {
-		t.Errorf("want %#v, got %#v", 2, x.C)
+	assign("bee", x, &token{tNumber, `2`})
+	if x.B != 2 {
+		t.Errorf("want %#v, got %#v", 2, x.B)
+	}
+
+	assign("C", x, &token{tString, `"3"`})
+	if x.C != uint32(3) {
+		t.Errorf("want %#v, got %#v", uint32(3), x.C)
 	}
 }
 

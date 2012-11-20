@@ -20,9 +20,18 @@ func assign(key string, x interface{}, tok *token) error {
 		return ErrInvalidType
 	}
 	st := sv.Type()
+
 	for i := 0; i < sv.NumField(); i++ {
-		if strings.EqualFold(st.Field(i).Name, key) {
-			return convertAssign(sv.Field(i), tok)
+		sf := st.Field(i)
+		tagName := sf.Tag.Get("logfmt")
+		if tagName == key {
+			return convertAssign(sv.FieldByIndex(sf.Index), tok)
+		}
+		if sf.Name == key {
+			return convertAssign(sv.FieldByIndex(sf.Index), tok)
+		}
+		if strings.EqualFold(sf.Name, key) {
+			return convertAssign(sv.FieldByIndex(sf.Index), tok)
 		}
 	}
 	return nil
