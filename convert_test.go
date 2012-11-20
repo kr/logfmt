@@ -12,6 +12,11 @@ func convertAssign(dv reflect.Value, tok *token) error {
 		return nil
 	}
 
+	for dv.Kind() == reflect.Ptr {
+		dv.Set(reflect.New(dv.Type().Elem()))
+		dv = reflect.Indirect(dv)
+	}
+
 	switch dv.Kind() {
 	case reflect.String:
 		dv.SetString(tok.string())
@@ -38,8 +43,19 @@ func convertAssign(dv reflect.Value, tok *token) error {
 	return nil
 }
 
+func newString(s string) *string {
+	return &s
+}
+
+func newStringp(s string) **string {
+	p := &s
+	return &p
+}
+
 func TestConvert(t *testing.T) {
 	sv := reflect.Indirect(reflect.New(reflect.TypeOf("")))
+	sp := reflect.Indirect(reflect.New(reflect.TypeOf(new(string))))
+	spp := reflect.Indirect(reflect.New(reflect.TypeOf(new(*string))))
 	nv := reflect.Indirect(reflect.New(reflect.TypeOf(0)))
 	tests := []struct {
 		v reflect.Value
@@ -51,6 +67,18 @@ func TestConvert(t *testing.T) {
 		{sv, &token{tIdent, "false"}, "false"},
 		{sv, &token{tNumber, "1"}, "1"},
 		{sv, &token{tIdent, "null"}, ""},
+
+		{sp, &token{tString, `"foo"`}, newString("foo")},
+		{sp, &token{tIdent, "true"}, newString("true")},
+		{sp, &token{tIdent, "false"}, newString("false")},
+		{sp, &token{tNumber, "1"}, newString("1")},
+		{sp, &token{tIdent, "null"}, (*string)(nil)},
+
+		{spp, &token{tString, `"foo"`}, newStringp("foo")},
+		{spp, &token{tIdent, "true"}, newStringp("true")},
+		{spp, &token{tIdent, "false"}, newStringp("false")},
+		{spp, &token{tNumber, "1"}, newStringp("1")},
+		{spp, &token{tIdent, "null"}, (**string)(nil)},
 
 		{nv, &token{tString, `"1"`}, 1},
 		{nv, &token{tIdent, "true"}, 1},
