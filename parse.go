@@ -14,7 +14,7 @@ var (
 func Unmarshal(b []byte, x interface{}) error {
 	s := newScanner(b)
 	for {
-		key, val, err := next(s)
+		key, val, err := nextPair(s)
 		if err != nil {
 			if err == eof {
 				return nil
@@ -28,8 +28,8 @@ func Unmarshal(b []byte, x interface{}) error {
 	return nil
 }
 
-func next(s *scanner) (key string, val *token, err error) {
-	tok, err := s.nextT()
+func nextPair(s *scanner) (key string, val *token, err error) {
+	tok, err := s.scan()
 	if err != nil {
 		return "", nil, err
 	}
@@ -44,7 +44,7 @@ func next(s *scanner) (key string, val *token, err error) {
 		return "", nil, ErrUnexpectedToken
 	}
 
-	tok, err = s.nextT()
+	tok, err = s.scan()
 	if err != nil {
 		return "", nil, err
 	}
@@ -56,7 +56,7 @@ func next(s *scanner) (key string, val *token, err error) {
 		return "", nil, ErrUnexpectedToken
 	}
 
-	tok, err = s.nextT()
+	tok, err = s.scan()
 	if err != nil {
 		return "", nil, err
 	}

@@ -90,7 +90,7 @@ func TestScan(t *testing.T) {
 	}
 	s := newScanner(data)
 	for _, w := range want {
-		g, err := s.nextT()
+		g, err := s.scan()
 		if err != nil {
 			t.Fatal(err)
 		}

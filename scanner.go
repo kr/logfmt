@@ -21,7 +21,7 @@ func newScanner(b []byte) *scanner {
 	return &scanner{b: b, r: ' '}
 }
 
-func (s *scanner) nextT() (*token, error) {
+func (s *scanner) scan() (*token, error) {
 	for {
 		s.skipWhitespace()
 
