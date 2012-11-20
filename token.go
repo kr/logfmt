@@ -49,6 +49,19 @@ func (tok *token) string() string {
 	return tok.src
 }
 
+func (tok *token) bool() bool {
+	switch tok.t {
+	case tIdent:
+		return tok.src != "false" && tok.src != "null"
+	case tString:
+		return unquote(tok.src) != ""
+	case tNumber:
+		n, _ := strconv.Atoi(tok.string())
+		return n != 0
+	}
+	return false
+}
+
 var (
 	identTrue  = []byte("true")
 	identFalse = []byte("false")

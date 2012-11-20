@@ -21,6 +21,9 @@ func convertAssign(dv reflect.Value, tok *token) error {
 	case reflect.String:
 		dv.SetString(tok.string())
 		return nil
+	case reflect.Bool:
+		dv.SetBool(tok.bool())
+		return nil
 	}
 
 	switch {
@@ -57,6 +60,7 @@ func TestConvert(t *testing.T) {
 	sp := reflect.Indirect(reflect.New(reflect.TypeOf(new(string))))
 	spp := reflect.Indirect(reflect.New(reflect.TypeOf(new(*string))))
 	nv := reflect.Indirect(reflect.New(reflect.TypeOf(0)))
+	bv := reflect.Indirect(reflect.New(reflect.TypeOf(true)))
 	tests := []struct {
 		v reflect.Value
 		t *token
@@ -85,6 +89,16 @@ func TestConvert(t *testing.T) {
 		{nv, &token{tIdent, "false"}, 0},
 		{nv, &token{tNumber, "123"}, 123},
 		{nv, &token{tIdent, "null"}, 0},
+
+		{bv, &token{tIdent, "true"}, true},
+		{bv, &token{tIdent, "false"}, false},
+		{bv, &token{tString, `"1"`}, true},
+		{bv, &token{tString, `"0"`}, true},
+		{bv, &token{tString, `""`}, false},
+		{bv, &token{tNumber, "0"}, false},
+		{bv, &token{tNumber, "123"}, true},
+		{bv, &token{tIdent, "null"}, false},
+		{bv, &token{tIdent, "foo"}, true},
 	}
 
 	for _, test := range tests {
