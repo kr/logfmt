@@ -34,11 +34,11 @@ func (s *scanner) nextT() (*token, error) {
 			s.next()
 			switch r {
 			case -1:
-				return &token{tEOF, nil}, nil
+				return &token{tEOF, ""}, nil
 			case '"':
 				return s.scanString()
 			case '=':
-				return &token{tEqual, nil}, nil
+				return &token{tEqual, ""}, nil
 			default:
 				return nil, ErrInvalidSyntax
 			}
@@ -77,7 +77,7 @@ func (s *scanner) scanString() (*token, error) {
 		}
 	}
 	s.next()
-	return &token{tString, s.b[m:s.i]}, nil
+	return &token{tString, string(s.b[m:s.i])}, nil
 }
 
 func (s *scanner) scanEscape() error {
@@ -95,7 +95,7 @@ func (s *scanner) scanNumber() *token {
 	for unicode.IsDigit(s.r) {
 		s.next()
 	}
-	return &token{tNumber, s.b[m:s.i]}
+	return &token{tNumber, string(s.b[m:s.i])}
 }
 
 func (s *scanner) scanIdent() *token {
@@ -103,5 +103,5 @@ func (s *scanner) scanIdent() *token {
 	for unicode.IsLetter(s.r) || unicode.IsDigit(s.r) {
 		s.next()
 	}
-	return &token{tIdent, s.b[m:s.i]}
+	return &token{tIdent, string(s.b[m:s.i])}
 }

@@ -9,7 +9,6 @@ var (
 	ErrUnexpectedToken = errors.New("unexpected token")
 	ErrUnexpectedEOF   = errors.New("unexpected EOF")
 
-	errPhase = errors.New("logfmt decoder out of sync - data changing underfoot?")
 	eof = errors.New("EOF")
 )
 
@@ -35,13 +34,9 @@ func next(s *scanner) (key string, val interface{}, err error) {
 	}
 	switch tok.t {
 	case tString:
-		s, ok := unquoteBytes(tok.src)
-		if !ok {
-			return "", "", errPhase
-		}
-		key = string(s)
+		key = unquote(tok.src)
 	case tIdent:
-		key = string(tok.src)
+		key = tok.src
 	case tEOF:
 		return "", "", eof
 	default:
@@ -60,18 +55,13 @@ func next(s *scanner) (key string, val interface{}, err error) {
 		return "", "", ErrUnexpectedToken
 	}
 
-
 	tok, err = s.nextT()
 	if err != nil {
 		return "", "", err
 	}
 	switch tok.t {
 	case tString:
-		s, ok := unquoteBytes(tok.src)
-		if !ok {
-			return "", "", errPhase
-		}
-		val = string(s)
+		val = unquote(tok.src)
 	case tNumber:
 		// We don't need to worry about an error. We know it's a number.
 		val, _ = strconv.Atoi(string(tok.src))
@@ -85,4 +75,3 @@ func next(s *scanner) (key string, val interface{}, err error) {
 
 	return key, val, nil
 }
-

@@ -19,7 +19,7 @@ func TestScanString(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := &token{tString, []byte(`"foo\"bar"`)}
+	w := &token{tString, `"foo\"bar"`}
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
@@ -29,7 +29,7 @@ func TestScanIdent(t *testing.T) {
 	s := newScanner([]byte(`ƒoo`))
 	s.next()
 	g := s.scanIdent()
-	w := &token{tIdent, []byte(`ƒoo`)}
+	w := &token{tIdent, `ƒoo`}
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
@@ -39,7 +39,7 @@ func TestScanNumber(t *testing.T) {
 	s := newScanner([]byte(`123`))
 	s.next()
 	g := s.scanNumber()
-	w := &token{tNumber, []byte(`123`)}
+	w := &token{tNumber, `123`}
 	if !reflect.DeepEqual(w, g) {
 		t.Errorf("want %q, got %q", w, g)
 	}
@@ -72,21 +72,21 @@ func TestNext(t *testing.T) {
 func TestScan(t *testing.T) {
 	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
 	want := []*token{
-		{tIdent, []byte(`a`)},
-		{tEqual, nil},
-		{tNumber, []byte("1")},
+		{tIdent, `a`},
+		{tEqual, ""},
+		{tNumber, "1"},
 
-		{tIdent, []byte("b")},
-		{tEqual, nil},
-		{tString, []byte(`"2"`)},
+		{tIdent, "b"},
+		{tEqual, ""},
+		{tString, `"2"`},
 
-		{tIdent, []byte("c")},
-		{tEqual, nil},
-		{tString, []byte(`"3\" 4"`)},
+		{tIdent, "c"},
+		{tEqual, ""},
+		{tString, `"3\" 4"`},
 
-		{tString, []byte(`"d"`)},
-		{tEqual, nil},
-		{tIdent, []byte(`b33s`)},
+		{tString, `"d"`},
+		{tEqual, ""},
+		{tIdent, `b33s`},
 	}
 	s := newScanner(data)
 	for _, w := range want {

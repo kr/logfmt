@@ -9,6 +9,11 @@ import (
 
 // Everything in here came from encoding/json in Go's stdlib.
 
+func unquote(s string) string {
+	b, _ := unquoteBytes([]byte(s))
+	return string(b)
+}
+
 func unquoteBytes(s []byte) (t []byte, ok bool) {
 	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
 		return

@@ -1,7 +1,6 @@
 package logfmt
 
 import (
-	"bytes"
 	"strconv"
 )
 
@@ -20,7 +19,7 @@ var (
 
 type token struct {
 	t   int
-	src []byte
+	src string
 }
 
 func (tok *token) isEOF() bool {
@@ -40,44 +39,32 @@ func (tok *token) isEqual() bool {
 }
 
 func (tok *token) isNull() bool {
-	return tok.t == tIdent && bytes.Equal(tok.src, null)
+	return tok.t == tIdent && tok.src == "null"
 }
 
 func (tok *token) string() string {
 	if tok.t == tString {
-		b, _ := unquoteBytes(tok.src)
-		return string(b)
+		return unquote(tok.src)
 	}
-	return string(tok.src)
-}
-
-func (tok *token) bytes() []byte {
 	return tok.src
 }
 
 var (
-	identTrue = []byte("true")
+	identTrue  = []byte("true")
 	identFalse = []byte("false")
-	identNull = []byte("null")
+	identNull  = []byte("null")
 )
 
 func (tok *token) int(bits int) (int64, error) {
 	if tok.t == tIdent {
-		switch {
-		case bytes.Equal(tok.src, identTrue):
+		switch tok.src {
+		case "true":
 			return 1, nil
-		case bytes.Equal(tok.src, identFalse):
-			return 0, nil
-		case bytes.Equal(tok.src, identNull):
+		case "false", "null":
 			return 0, nil
 		}
 	}
-
-	b := tok.src
-	if tok.t ==  tString {
-		b, _ = unquoteBytes(b)
-	}
-	return strconv.ParseInt(string(b), 10, bits)
+	return strconv.ParseInt(tok.string(), 10, bits)
 }
 
 func (tok *token) uint(bits int) (uint64, error) {
