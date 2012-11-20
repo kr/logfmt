@@ -2,8 +2,50 @@ package logfmt
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func assign(key string, x interface{}, tok *token) error {
+	sv := reflect.Indirect(reflect.ValueOf(x))
+	st := sv.Type()
+	for i := 0; i < sv.NumField(); i++ {
+		sf := st.Field(i)
+		if strings.EqualFold(sf.Name, key) {
+			return convertAssign(sv.FieldByIndex(sf.Index), tok)
+		}
+	}
+	return nil
+}
+
+func TestAssign(t *testing.T) {
+	type T struct {
+		A string
+		B int
+		C uint32
+	}
+
+	x := new(T)
+	assign("A", x, &token{tString, `"foo"`})
+	if x.A != "foo" {
+		t.Errorf("want %#v, got %#v", "foo", x.A)
+	}
+
+	assign("a", x, &token{tString, `"bar"`})
+	if x.A != "bar" {
+		t.Errorf("want %#v, got %#v", "foo", x.A)
+	}
+
+	assign("B", x, &token{tString, `"1"`})
+	if x.B != 1 {
+		t.Errorf("want %#v, got %#v", 1, x.B)
+	}
+
+	assign("C", x, &token{tString, `"2"`})
+	if x.B != 1 {
+		t.Errorf("want %#v, got %#v", 2, x.C)
+	}
+}
 
 // assumes dst.CanSet() == true
 func convertAssign(dv reflect.Value, tok *token) error {
