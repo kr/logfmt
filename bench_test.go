@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func BenchmarkUnmarshal(b *testing.B) {
+func BenchmarkUnmarshalStruct(b *testing.B) {
 	b.StopTimer()
 	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
 	type T struct {
@@ -15,6 +15,18 @@ func BenchmarkUnmarshal(b *testing.B) {
 	}
 
 	g := new(T)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		if err := Unmarshal(data, g); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkUnmarshalMap(b *testing.B) {
+	b.StopTimer()
+	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
+	g := make(map[string]string)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		if err := Unmarshal(data, g); err != nil {
