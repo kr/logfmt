@@ -23,7 +23,7 @@ func assign(key string, x interface{}, tok *token) error {
 	for i := 0; i < sv.NumField(); i++ {
 		sf := st.Field(i)
 		if strings.EqualFold(sf.Name, key) {
-			return convertAssign(sv.FieldByIndex(sf.Index), tok)
+			return convertAssign(sv.Field(i), tok)
 		}
 	}
 	return nil
