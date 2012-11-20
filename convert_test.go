@@ -53,18 +53,12 @@ func (ct *convertTester) converts(dst reflect.Value, src *token, w interface{}) 
 }
 
 func TestConvert(t *testing.T) {
-
-	type T struct {
-		S string
-	}
-
 	ct := &convertTester{t}
-	sv := reflect.ValueOf(new(T))
-	si := reflect.Indirect(sv)
-	f := si.Field(0)
-	ct.converts(f, &token{tString, []byte("foo")}, "foo")
-	ct.converts(f, &token{tIdent, []byte("true")}, "true")
-	ct.converts(f, &token{tIdent, []byte("false")}, "false")
-	ct.converts(f, &token{tNumber, []byte("1")}, "1")
-	ct.converts(f, &token{tIdent, []byte("null")}, "")
+
+	v := reflect.Indirect(reflect.New(reflect.TypeOf("")))
+	ct.converts(v, &token{tString, []byte("foo")}, "foo")
+	ct.converts(v, &token{tIdent, []byte("true")}, "true")
+	ct.converts(v, &token{tIdent, []byte("false")}, "false")
+	ct.converts(v, &token{tNumber, []byte("1")}, "1")
+	ct.converts(v, &token{tIdent, []byte("null")}, "")
 }
