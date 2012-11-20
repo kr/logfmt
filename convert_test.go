@@ -4,10 +4,22 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"errors"
 )
 
+var ErrInvalidType = errors.New("logfmt: invalid type")
+
 func assign(key string, x interface{}, tok *token) error {
+	switch v := x.(type) {
+	case map[string]string:
+		v[key] = tok.string()
+		return nil
+	}
+
 	sv := reflect.Indirect(reflect.ValueOf(x))
+	if sv.Kind() != reflect.Struct {
+		return ErrInvalidType
+	}
 	st := sv.Type()
 	for i := 0; i < sv.NumField(); i++ {
 		sf := st.Field(i)
@@ -18,7 +30,19 @@ func assign(key string, x interface{}, tok *token) error {
 	return nil
 }
 
-func TestAssign(t *testing.T) {
+func TestAssignMap(t *testing.T) {
+	g := make(map[string]interface{})
+	assign("a", g, &token{tNumber, `1`})
+
+	w := map[string]string{
+		"a": "1",
+	}
+	if reflect.DeepEqual(g, w){
+		t.Errorf("want %#v, got %#v", w, g)
+	}
+}
+
+func TestAssignStruct(t *testing.T) {
 	type T struct {
 		A string
 		B int
