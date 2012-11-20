@@ -21,6 +21,7 @@ func BenchmarkUnmarshalStruct(b *testing.B) {
 			panic(err)
 		}
 	}
+	b.SetBytes(int64(len(data)))
 }
 
 func BenchmarkUnmarshalMap(b *testing.B) {
@@ -33,4 +34,5 @@ func BenchmarkUnmarshalMap(b *testing.B) {
 			panic(err)
 		}
 	}
+	b.SetBytes(int64(len(data)))
 }
