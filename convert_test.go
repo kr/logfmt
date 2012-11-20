@@ -40,6 +40,7 @@ func convertAssign(dv reflect.Value, tok *token) error {
 
 func TestConvert(t *testing.T) {
 	sv := reflect.Indirect(reflect.New(reflect.TypeOf("")))
+	nv := reflect.Indirect(reflect.New(reflect.TypeOf(0)))
 	tests := []struct{
 		v reflect.Value
 		t *token
@@ -50,6 +51,12 @@ func TestConvert(t *testing.T) {
 		{sv, &token{tIdent, []byte("false")}, "false"},
 		{sv, &token{tNumber, []byte("1")}, "1"},
 		{sv, &token{tIdent, []byte("null")}, ""},
+
+		{nv, &token{tString, []byte(`"1"`)}, 1},
+		{nv, &token{tIdent, []byte("true")}, 1},
+		{nv, &token{tIdent, []byte("false")}, 0},
+		{nv, &token{tNumber, []byte("123")}, 123},
+		{nv, &token{tIdent, []byte("null")}, 0},
 	}
 
 	for _, test := range tests {

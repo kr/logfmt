@@ -55,8 +55,29 @@ func (tok *token) bytes() []byte {
 	return tok.src
 }
 
+var (
+	identTrue = []byte("true")
+	identFalse = []byte("false")
+	identNull = []byte("null")
+)
+
 func (tok *token) int(bits int) (int64, error) {
-	return strconv.ParseInt(string(tok.src), 10, bits)
+	if tok.t == tIdent {
+		switch {
+		case bytes.Equal(tok.src, identTrue):
+			return 1, nil
+		case bytes.Equal(tok.src, identFalse):
+			return 0, nil
+		case bytes.Equal(tok.src, identNull):
+			return 0, nil
+		}
+	}
+
+	b := tok.src
+	if tok.t ==  tString {
+		b, _ = unquoteBytes(b)
+	}
+	return strconv.ParseInt(string(b), 10, bits)
 }
 
 func (tok *token) uint(bits int) (uint64, error) {
