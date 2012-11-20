@@ -13,7 +13,7 @@ func TestParse(t *testing.T) {
 		"c": "3\" 4",
 		"d": "b33s",
 	}
-	g := make(map[string]interface{})
+	g := make(map[string]string)
 	if err := Unmarshal(data, g); err != nil {
 		t.Fatal(err)
 	}
