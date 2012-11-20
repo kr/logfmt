@@ -21,8 +21,7 @@ func assign(key string, x interface{}, tok *token) error {
 	}
 	st := sv.Type()
 	for i := 0; i < sv.NumField(); i++ {
-		sf := st.Field(i)
-		if strings.EqualFold(sf.Name, key) {
+		if strings.EqualFold(st.Field(i).Name, key) {
 			return convertAssign(sv.Field(i), tok)
 		}
 	}
