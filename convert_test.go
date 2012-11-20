@@ -12,7 +12,7 @@ func TestAssignMap(t *testing.T) {
 	w := map[string]string{
 		"a": "1",
 	}
-	if reflect.DeepEqual(g, w){
+	if reflect.DeepEqual(g, w) {
 		t.Errorf("want %#v, got %#v", w, g)
 	}
 }
@@ -45,7 +45,7 @@ func TestAssignStruct(t *testing.T) {
 		t.Errorf("want %#v, got %#v", 2, x.C)
 	}
 }
- 
+
 func TestConvert(t *testing.T) {
 	sv := reflect.Indirect(reflect.New(reflect.TypeOf("")))
 	sp := reflect.Indirect(reflect.New(reflect.TypeOf(new(string))))

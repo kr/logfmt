@@ -1,9 +1,9 @@
 package logfmt
 
 import (
+	"errors"
 	"reflect"
 	"strings"
-	"errors"
 )
 
 var ErrInvalidType = errors.New("logfmt: invalid type")
