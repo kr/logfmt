@@ -23,6 +23,7 @@ func TestAssignStruct(t *testing.T) {
 		B int `logfmt:"bee"`
 		C uint32
 		D int `logfmt:"-"`
+		E float64
 	}
 
 	x := new(T)
@@ -55,6 +56,11 @@ func TestAssignStruct(t *testing.T) {
 	assign("D", x, &val{vNumber, "3"})
 	if x.D == 3 {
 		t.Errorf("want %#v, got %#v", 0, x.D)
+	}
+
+	assign("E", x, &val{vNumber, "1e9"})
+	if x.E != 1e9 {
+		t.Errorf("want %#v, got %#v", float64(1e9), x.E)
 	}
 }
 

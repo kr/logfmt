@@ -79,3 +79,7 @@ func (v *val) uint(bits int) (uint64, error) {
 	}
 	return strconv.ParseUint(v.s, 10, bits)
 }
+
+func (v *val) float(bits int) (float64, error) {
+	return strconv.ParseFloat(v.s, bits)
+}

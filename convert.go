@@ -77,6 +77,13 @@ func convertAssign(dv reflect.Value, v *val) error {
 		}
 		dv.SetUint(n)
 		return nil
+	case reflect.Float32 <= dv.Kind() && dv.Kind() <= reflect.Float64:
+		n, err := v.float(dv.Type().Bits())
+		if err != nil {
+			return err
+		}
+		dv.SetFloat(n)
+		return nil
 	}
 
 	return nil
