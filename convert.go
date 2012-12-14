@@ -24,6 +24,10 @@ func assign(key string, x interface{}, tok *val) error {
 	for i := 0; i < sv.NumField(); i++ {
 		sf := st.Field(i)
 		tagName := sf.Tag.Get("logfmt")
+		if tagName == "-" {
+			// Ignore this field
+			continue
+		}
 		if tagName == key {
 			return convertAssign(sv.FieldByIndex(sf.Index), tok)
 		}
