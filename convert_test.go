@@ -24,7 +24,7 @@ func TestAssignStruct(t *testing.T) {
 		C uint32
 		D int `logfmt:"-"`
 		E float64
-		F *Quantity
+		F Quantity
 	}
 
 	x := new(T)
@@ -66,7 +66,7 @@ func TestAssignStruct(t *testing.T) {
 
 	assign("F", x, &val{vValue, "100ms"})
 	want := Quantity{100, "ms"}
-	if *x.F != want {
+	if x.F != want {
 		t.Errorf("want %#v, got %#v", want, x.F)
 	}
 }

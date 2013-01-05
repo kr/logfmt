@@ -89,9 +89,9 @@ func (v *val) float(bits int) (float64, error) {
 	return strconv.ParseFloat(v.s, bits)
 }
 
-func (v *val) quantity() *Quantity {
+func (v *val) quantity() Quantity {
 	i := strings.IndexFunc(v.s, unicode.IsLetter)
-	q := new(Quantity)
+	q := Quantity{}
 	q.Value, _ = strconv.ParseInt(v.s[:i], 10, 64)
 	q.Unit = Unit(v.s[i:])
 	return q
