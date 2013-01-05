@@ -11,6 +11,13 @@ var (
 	eof = errors.New("EOF")
 )
 
+type Unit string
+
+type Quantity struct {
+	Value int64
+	Unit  Unit
+}
+
 func Unmarshal(b []byte, x interface{}) error {
 	s := newScanner(b)
 	for {

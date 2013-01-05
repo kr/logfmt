@@ -27,7 +27,11 @@ func (s *scanner) scan() (token, string, error) {
 
 		switch r := s.r; {
 		case unicode.IsDigit(r):
-			return tNumber, s.scanNumber(), nil
+			n := s.scanNumber()
+			if unicode.IsLetter(s.r) {
+				return tValue, n + s.scanUnit(), nil
+			}
+			return tNumber, n, nil
 		case unicode.IsLetter(r):
 			return tIdent, s.scanIdent(), nil
 		default:
@@ -101,6 +105,14 @@ func (s *scanner) scanNumber() string {
 func (s *scanner) scanIdent() string {
 	m := s.i
 	for unicode.IsLetter(s.r) || unicode.IsDigit(s.r) {
+		s.next()
+	}
+	return string(s.b[m:s.i])
+}
+
+func (s *scanner) scanUnit() string {
+	m := s.i
+	for unicode.IsLetter(s.r) {
 		s.next()
 	}
 	return string(s.b[m:s.i])

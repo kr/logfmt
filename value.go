@@ -2,6 +2,8 @@ package logfmt
 
 import (
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 type vtype int
@@ -12,6 +14,7 @@ const (
 	vFalse
 	vNumber
 	vString
+	vValue
 )
 
 type val struct {
@@ -25,6 +28,8 @@ func newVal(tok token, src string) *val {
 		return &val{vString, unquote(src)}
 	case tNumber:
 		return &val{vNumber, src}
+	case tValue:
+		return &val{vValue, src}
 	case tIdent:
 		switch src {
 		case "null":
@@ -82,4 +87,12 @@ func (v *val) uint(bits int) (uint64, error) {
 
 func (v *val) float(bits int) (float64, error) {
 	return strconv.ParseFloat(v.s, bits)
+}
+
+func (v *val) quantity() *Quantity {
+	i := strings.IndexFunc(v.s, unicode.IsLetter)
+	q := new(Quantity)
+	q.Value, _ = strconv.ParseInt(v.s[:i], 10, 64)
+	q.Unit = Unit(v.s[i:])
+	return q
 }

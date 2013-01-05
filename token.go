@@ -9,4 +9,5 @@ const (
 	tString
 	tNumber
 	tIdent
+	tValue
 )

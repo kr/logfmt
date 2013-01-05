@@ -73,7 +73,7 @@ func TestNext(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s`)
+	data := []byte(`a=1 b="2" c="3\" 4" "d"=b33s e=100ms`)
 	want := []struct {
 		tok token
 		lit string
@@ -93,6 +93,10 @@ func TestScan(t *testing.T) {
 		{tString, `"d"`},
 		{tEqual, ""},
 		{tIdent, `b33s`},
+
+		{tIdent, `e`},
+		{tEqual, ""},
+		{tValue, `100ms`},
 	}
 	s := newScanner(data)
 	for _, w := range want {

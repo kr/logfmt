@@ -48,6 +48,12 @@ func convertAssign(dv reflect.Value, v *val) error {
 		return nil
 	}
 
+	if _, ok := dv.Interface().(*Quantity); ok {
+		q := v.quantity()
+		dv.Set(reflect.ValueOf(q))
+		return nil
+	}
+
 	for dv.Kind() == reflect.Ptr {
 		dv.Set(reflect.New(dv.Type().Elem()))
 		dv = reflect.Indirect(dv)
