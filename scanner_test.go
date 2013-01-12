@@ -7,7 +7,7 @@ import (
 )
 
 func TestScan(t *testing.T) {
-	data := []byte(`ƒoo=bar  "foo"="bar" foo=123`)
+	data := []byte(`ƒoo=bar  "foo"="bar" foo=123ms` + "\n")
 
 	want := []int{
 		// foo=bar<space><space>
@@ -35,7 +35,7 @@ func TestScan(t *testing.T) {
 		scanContinue,
 		scanSkipSpace,
 
-		// foo=123<eof>
+		// foo=123ms<eof>
 		scanBeginKey,
 		scanContinue,
 		scanContinue,
@@ -43,6 +43,9 @@ func TestScan(t *testing.T) {
 		scanBeginValue,
 		scanContinue,
 		scanContinue,
+		scanContinue,
+		scanContinue,
+		scanEnd,
 	}
 
 	s := new(scanner)
@@ -58,10 +61,23 @@ func TestScan(t *testing.T) {
 		g := s.step(s, r)
 		if w != g {
 			t.Logf("== col(%00d) ==", i)
+			t.Log(s.err)
 			t.Logf("%s", data)
-			t.Log(strings.Repeat("-", i-1) + "^")
+			t.Log(strings.Repeat("-", i) + "^")
 			t.Errorf("want %d, got %d", w, g)
 			t.Log("=============")
 		}
+	}
+}
+
+func BenchmarkScanner(b *testing.B) {
+	data := `ƒoo=bar  "foo"="bar" foo=123ms` + "\n"
+	s := new(scanner)
+	s.reset()
+	for i := 0; i < b.N; i++ {
+		for _, r := range data {
+			s.step(s, r)
+		}
+		b.SetBytes(int64(len(data) * b.N))
 	}
 }

@@ -1,6 +1,8 @@
 package logfmt
 
 import (
+	"errors"
+	"fmt"
 	"unicode"
 )
 
@@ -9,6 +11,7 @@ type stateFunc func(s *scanner, r rune) int
 type scanner struct {
 	step stateFunc
 	next stateFunc
+	err  error
 }
 
 const (
@@ -17,6 +20,7 @@ const (
 	scanBeginKey
 	scanEqual
 	scanBeginValue
+	scanEnd
 	scanError
 )
 
@@ -26,9 +30,10 @@ func (s *scanner) reset() {
 
 func (s *scanner) error(r rune, context string) int {
 	s.step = stateError
+	s.err = errors.New(fmt.Sprintf("%q: %s", r, context))
 	return scanError
 }
-	
+
 func stateError(s *scanner, r rune) int {
 	return scanError
 }
@@ -40,6 +45,9 @@ func stateBeginKey(s *scanner, r rune) int {
 	case ' ' == r:
 		s.step = stateBeginKey
 		return scanSkipSpace
+	case '\n' == r:
+		s.step = stateBeginKey
+		return scanEnd
 	case '"' == r:
 		s.step = stateInString
 		s.next = stateEqual
@@ -92,12 +100,12 @@ func stateInString(s *scanner, r rune) int {
 
 // stateInStringEsc is the state after reading `"\` during a quoted string.
 func stateInStringEsc(s *scanner, r rune) int {
-        switch r {
-        case 'b', 'f', 'n', 'r', 't', '\\', '/', '"':
-                s.step = stateInString
-                return scanContinue
-        }
-        return s.error(r, "in escape")
+	switch r {
+	case 'b', 'f', 'n', 'r', 't', '\\', '/', '"':
+		s.step = stateInString
+		return scanContinue
+	}
+	return s.error(r, "in escape")
 }
 
 func stateEqual(s *scanner, r rune) int {
@@ -109,5 +117,30 @@ func stateEqual(s *scanner, r rune) int {
 }
 
 func stateInNumberOrUnit(s *scanner, r rune) int {
-	panic("implement me")
+	if unicode.IsDigit(r) {
+		s.step = stateInNumberOrUnit
+		return scanContinue
+	}
+	return stateInUnit(s, r)
+}
+
+func stateInUnit(s *scanner, r rune) int {
+	switch r {
+	case 's':
+		s.step = s.next
+		return scanContinue
+	case 'm', 'n':
+		s.step = stateInUnit1
+		return scanContinue
+	}
+	return s.error(r, "in unit prefix")
+}
+
+func stateInUnit1(s *scanner, r rune) int {
+	switch r {
+	case 's':
+		s.step = s.next
+		return scanContinue
+	}
+	return s.error(r, "in unit base")
 }
