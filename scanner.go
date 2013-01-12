@@ -23,22 +23,33 @@ const (
 func (s *scanner) reset() {
 	s.step = stateBeginKey
 }
+
+func (s *scanner) error(r rune, context string) int {
+	s.step = stateError
+	return scanError
+}
 	
+func stateError(s *scanner, r rune) int {
+	return scanError
+}
+
 func stateBeginKey(s *scanner, r rune) int {
+	s.next = nil
+
 	switch {
-	case unicode.IsLetter(r):
-		s.step = stateInIdent
-		s.next = stateEqual
-		return scanBeginKey
+	case ' ' == r:
+		s.step = stateBeginKey
+		return scanSkipSpace
 	case '"' == r:
 		s.step = stateInString
 		s.next = stateEqual
 		return scanBeginKey
-	case ' ' == r:
-		s.step = stateBeginKey
-		return scanSkipSpace
+	case unicode.IsLetter(r):
+		s.step = stateInIdent
+		s.next = stateEqual
+		return scanBeginKey
 	}
-	return scanError
+	return s.error(r, "as start of string or identifier")
 }
 
 func stateBeginValue(s *scanner, r rune) int {
@@ -49,17 +60,14 @@ func stateBeginValue(s *scanner, r rune) int {
 		return scanBeginValue
 	case unicode.IsDigit(r):
 		s.step = stateInNumberOrUnit
-		s.next = stateBeginValue
+		s.next = stateBeginKey
 		return scanBeginValue
 	case '"' == r:
 		s.step = stateInString
-		s.next = stateEqual
+		s.next = stateBeginKey
 		return scanBeginValue
-	case ' ' == r:
-		s.step = stateBeginValue
-		return scanSkipSpace
 	}
-	return scanError
+	return s.error(r, "invalid value")
 }
 
 func stateInIdent(s *scanner, r rune) int {
@@ -75,11 +83,9 @@ func stateInString(s *scanner, r rune) int {
 	switch r {
 	case '\\':
 		s.step = stateInStringEsc
-		return scanContinue
 	case '"':
 		s.step = s.next
 		s.next = stateBeginKey
-		return scanContinue
 	}
 	return scanContinue
 }
@@ -91,7 +97,7 @@ func stateInStringEsc(s *scanner, r rune) int {
                 s.step = stateInString
                 return scanContinue
         }
-        return scanError
+        return s.error(r, "in escape")
 }
 
 func stateEqual(s *scanner, r rune) int {
@@ -99,9 +105,9 @@ func stateEqual(s *scanner, r rune) int {
 		s.step = stateBeginValue
 		return scanEqual
 	}
-	return scanError
+	return s.error(r, "not '='")
 }
 
 func stateInNumberOrUnit(s *scanner, r rune) int {
-	return -1
+	panic("implement me")
 }

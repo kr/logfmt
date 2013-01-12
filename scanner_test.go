@@ -1,12 +1,16 @@
 package logfmt
 
 import (
+	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestScan(t *testing.T) {
-	data := `foo=bar  "foo"="bar"`
+	data := []byte(`ƒoo=bar  "foo"="bar" foo=123`)
+
 	want := []int{
+		// foo=bar<space><space>
 		scanBeginKey,
 		scanContinue,
 		scanContinue,
@@ -16,6 +20,8 @@ func TestScan(t *testing.T) {
 		scanContinue,
 		scanSkipSpace,
 		scanSkipSpace,
+
+		// "foo"="bar"<space>
 		scanBeginKey,
 		scanContinue,
 		scanContinue,
@@ -25,19 +31,37 @@ func TestScan(t *testing.T) {
 		scanBeginValue,
 		scanContinue,
 		scanContinue,
+		scanContinue,
+		scanContinue,
+		scanSkipSpace,
+
+		// foo=123<eof>
+		scanBeginKey,
+		scanContinue,
+		scanContinue,
+		scanEqual,
+		scanBeginValue,
 		scanContinue,
 		scanContinue,
 	}
 
-	t.Logf("%q", data)
-
 	s := new(scanner)
 	s.reset()
+	d := data
 	for i, w := range want {
-		r := rune(data[i])
+		r, n := utf8.DecodeRune(d)
+		d = d[n:]
+		if len(data) == 0 {
+			t.Fatal("expecting more than is in data")
+		}
+
 		g := s.step(s, r)
 		if w != g {
-			t.Errorf("col %d(%q): want %d, got %d", i, r, w, g)
+			t.Logf("== col(%00d) ==", i)
+			t.Logf("%s", data)
+			t.Log(strings.Repeat("-", i-1) + "^")
+			t.Errorf("want %d, got %d", w, g)
+			t.Log("=============")
 		}
 	}
 }
