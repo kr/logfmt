@@ -78,6 +78,6 @@ func BenchmarkScanner(b *testing.B) {
 		for _, r := range data {
 			s.step(s, r)
 		}
-		b.SetBytes(int64(len(data) * b.N))
 	}
+	b.SetBytes(int64(len(data) * b.N))
 }
