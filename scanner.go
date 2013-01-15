@@ -46,7 +46,7 @@ func stateBeginKey(s *scanner, r rune) int {
 		s.step = stateBeginKey
 		return scanSkipSpace
 	case '\n' == r:
-		s.step = stateBeginKey
+		s.step = stateEnd
 		return scanEnd
 	case '"' == r:
 		s.step = stateInString
@@ -143,4 +143,8 @@ func stateInUnit1(s *scanner, r rune) int {
 		return scanContinue
 	}
 	return s.error(r, "in unit base")
+}
+
+func stateEnd(s *scanner, r rune) int {
+	return scanEnd
 }
