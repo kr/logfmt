@@ -1,5 +1,10 @@
 package logfmt
 
-func unmarshal(buf []byte, v interface{}) error {
+func Unmarshal(data []byte, v interface{}) error {
+	// TODO check valid before unmarshal
+	return nil
+}
+
+func unmarshal(data []byte, v interface{}) error {
 	return nil
 }
