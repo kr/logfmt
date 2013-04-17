@@ -5,10 +5,18 @@ import (
 )
 
 func TestIsIdent(t *testing.T) {
-	if !isIdent('q') { t.Error("should be an ident") }
-	if isIdent('=') { t.Error("should not be an ident") }
-	if isIdent(' ') { t.Error("should not be an ident") }
-	if isIdent('"') { t.Error("should not be an ident") }
+	if !isIdent('q') {
+		t.Error("should be an ident")
+	}
+	if isIdent('=') {
+		t.Error("should not be an ident")
+	}
+	if isIdent(' ') {
+		t.Error("should not be an ident")
+	}
+	if isIdent('"') {
+		t.Error("should not be an ident")
+	}
 }
 
 func TestScanSimple(t *testing.T) {

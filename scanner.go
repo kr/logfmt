@@ -50,14 +50,14 @@ type scanner struct {
 
 func (s *scanner) newline() {
 	s.line++
-	s.reset()	
+	s.reset()
 }
 
 func (s *scanner) reset() {
 	s.step = s.stateBeginKey
 }
 
-func (s *scanner) errorf(r rune, msg string, args ... interface{}) scannerState {
+func (s *scanner) errorf(r rune, msg string, args ...interface{}) scannerState {
 	msg = fmt.Sprintf(msg, args...)
 	s.err = &scannerError{s.line, fmt.Sprintf("unexpected %q, %s", r, msg)}
 	s.step = s.stateEnd
@@ -72,7 +72,7 @@ func (s *scanner) stateBeginKey(r rune) scannerState {
 	switch {
 	case isIdent(r):
 		s.step = s.stateInIdent
-		s.next = s.stateEqual
+		s.next = s.stateEqualOrEmptyKey
 		return scanBeginKey
 	default:
 		s.step = s.stateBeginKey
@@ -90,11 +90,14 @@ func (s *scanner) stateInIdent(r rune) scannerState {
 	}
 }
 
-func (s *scanner) stateEqual(r rune) scannerState {
+func (s *scanner) stateEqualOrEmptyKey(r rune) scannerState {
 	switch r {
 	case '=':
 		s.step = s.stateBeginValue
 		return scanEqual
+	case ' ':
+		s.step = s.stateBeginKey
+		return scanSkip
 	default:
 		return s.errorf(r, `expected "="`)
 	}
