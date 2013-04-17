@@ -48,6 +48,8 @@ type scanner struct {
 	line int
 }
 
+// newline increments the line number for error reporting and resets the
+// scanner.
 func (s *scanner) newline() {
 	s.line++
 	s.reset()
@@ -109,6 +111,9 @@ func (s *scanner) stateBeginValue(r rune) scannerState {
 		s.step = s.stateInString
 		s.next = s.stateBeginKey
 		return scanBeginValue
+	case ' ':
+		s.step = s.stateBeginKey
+		return scanSkip
 	default:
 		if isIdent(r) {
 			s.step = s.stateInIdent

@@ -67,17 +67,24 @@ func TestScanSimple(t *testing.T) {
 		{'l', scanContinue},
 		{'l', scanContinue},
 		{'=', scanEqual},
+		{' ', scanSkip},
+		{'p', scanBeginKey},
+		{'=', scanEqual},
+		{'9', scanBeginValue},
+		{'0', scanContinue},
+		{'%', scanContinue},
 	}
 
 	s := new(scanner)
 	s.reset()
 	for i, test := range tests {
+		t.Logf("%q", test.r)
 		g := s.step(test.r)
 		if test.w != g {
 			if s.err != nil {
 				t.Error(s.err)
 			}
-			t.Fatalf("at %d: want %s, got %s", i, test.w, g)
+			t.Fatalf("at %d %q: want %s, got %s", i, test.r, test.w, g)
 		}
 	}
 }
