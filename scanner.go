@@ -108,8 +108,7 @@ func (s *scanner) stateEqualOrEmptyKey(r rune) scannerState {
 func (s *scanner) stateBeginValue(r rune) scannerState {
 	switch r {
 	case '"':
-		s.step = s.stateInString
-		s.next = s.stateBeginKey
+		s.step = s.stateInStringValue
 		return scanBeginValue
 	case ' ':
 		s.step = s.stateBeginKey
@@ -124,10 +123,10 @@ func (s *scanner) stateBeginValue(r rune) scannerState {
 	}
 }
 
-func (s *scanner) stateInString(r rune) scannerState {
+func (s *scanner) stateInStringValue(r rune) scannerState {
 	switch r {
 	case '"':
-		s.step = s.next
+		s.step = s.stateBeginKey
 		return scanContinue
 	case '\\':
 		s.step = s.stateInStringESC
@@ -138,7 +137,7 @@ func (s *scanner) stateInString(r rune) scannerState {
 }
 
 func (s *scanner) stateInStringESC(r rune) scannerState {
-	s.step = s.stateInString
+	s.step = s.stateInStringValue
 	return scanContinue
 }
 
