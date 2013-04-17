@@ -82,6 +82,7 @@ func (s *scanner) stateBeginKey(r rune) scannerState {
 func (s *scanner) stateInIdent(r rune) scannerState {
 	switch {
 	case isIdent(r):
+		s.step = s.stateInIdent
 		return scanContinue
 	default:
 		return s.next(r)
@@ -132,5 +133,10 @@ func (s *scanner) stateInStringESC(r rune) scannerState {
 }
 
 func isIdent(r rune) bool {
-	return r > ' ' && r != '=' && r != '"'
+	switch r {
+	case '=', '"':
+		return false
+	default:
+		return r > ' '
+	}
 }
