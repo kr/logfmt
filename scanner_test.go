@@ -38,10 +38,8 @@ func TestScanSimple(t *testing.T) {
 
 		// c=20h30s
 		scanBeginKey,
-		scanContinue,
 		scanEqual,
 		scanBeginValue,
-		scanContinue,
 		scanContinue,
 		scanContinue,
 		scanContinue,
@@ -75,7 +73,7 @@ func TestScanSimple(t *testing.T) {
 	s.reset()
 	for i, r := range data {
 		g := s.step(r)
-		t.Log("got:", g)
+		t.Logf("%q: got %s", r, g)
 		if want[i] != g {
 			if s.err != nil {
 				t.Error(s.err)
