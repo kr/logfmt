@@ -26,10 +26,12 @@ type scannerTest struct {
 
 func TestScanSimple(t *testing.T) {
 	tests := []scannerTest{
+		{'=', scanSkip},
+		{' ', scanSkip},
 		{'a', scanBeginKey},
 		{'=', scanEqual},
 		{'1', scanBeginValue},
-		{' ', scanSkip},
+		{'=', scanSkip},
 		{' ', scanSkip},
 		{'b', scanBeginKey},
 		{'a', scanContinue},
