@@ -73,6 +73,8 @@ func TestScanSimple(t *testing.T) {
 		{'9', scanBeginValue},
 		{'0', scanContinue},
 		{'%', scanContinue},
+		{' ', scanSkip},
+		{' ', scanSkip},
 	}
 
 	s := new(scanner)
