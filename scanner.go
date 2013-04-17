@@ -43,7 +43,6 @@ type stateFunc func(r rune) scannerState
 
 type scanner struct {
 	step stateFunc
-	next stateFunc
 	err  error
 	line int
 }
@@ -73,8 +72,7 @@ func (s *scanner) stateEnd(r rune) scannerState {
 func (s *scanner) stateBeginKey(r rune) scannerState {
 	switch {
 	case isIdent(r):
-		s.step = s.stateInIdent
-		s.next = s.stateEqualOrEmptyKey
+		s.step = s.stateInKey
 		return scanBeginKey
 	default:
 		s.step = s.stateBeginKey
@@ -82,13 +80,23 @@ func (s *scanner) stateBeginKey(r rune) scannerState {
 	}
 }
 
-func (s *scanner) stateInIdent(r rune) scannerState {
+func (s *scanner) stateInKey(r rune) scannerState {
 	switch {
 	case isIdent(r):
-		s.step = s.stateInIdent
 		return scanContinue
 	default:
-		return s.next(r)
+		s.step = s.stateEqualOrEmptyKey
+		return s.step(r)
+	}
+}
+
+func (s *scanner) stateInIdentValue(r rune) scannerState {
+	switch {
+	case isIdent(r):
+		return scanContinue
+	default:
+		s.step = s.stateBeginKey
+		return s.step(r)
 	}
 }
 
@@ -115,8 +123,7 @@ func (s *scanner) stateBeginValue(r rune) scannerState {
 		return scanSkip
 	default:
 		if isIdent(r) {
-			s.step = s.stateInIdent
-			s.next = s.stateBeginKey
+			s.step = s.stateInIdentValue
 			return scanBeginValue
 		}
 		return s.errorf(r, `expected IDENT or STRING`)
