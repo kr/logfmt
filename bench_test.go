@@ -5,7 +5,7 @@ import (
 )
 
 func BenchmarkScanner(b *testing.B) {
-	const data = "measure.test=1 measure.foo=bar measure.time=2h"
+	data := []byte("measure.test=1 measure.foo=bar measure.time=2h")
 
 	b.StopTimer()
 	s := new(stepper)
@@ -14,8 +14,8 @@ func BenchmarkScanner(b *testing.B) {
 		s.reset()
 
 		b.StartTimer()
-		for _, r := range data {
-			s.step(r)
+		for _, c := range data {
+			s.step(c)
 		}
 		b.StopTimer()
 

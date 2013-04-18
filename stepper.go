@@ -40,7 +40,7 @@ func (err *stepperError) Error() string {
 }
 
 type stepper struct {
-	step func(r rune) stepperState
+	step func(c byte) stepperState
 	err  error
 	line int
 }
@@ -56,20 +56,20 @@ func (s *stepper) reset() {
 	s.step = s.stateBeginKey
 }
 
-func (s *stepper) errorf(r rune, msg string, args ...interface{}) stepperState {
+func (s *stepper) errorf(c byte, msg string, args ...interface{}) stepperState {
 	msg = fmt.Sprintf(msg, args...)
-	s.err = &stepperError{s.line, fmt.Sprintf("unexpected %q, %s", r, msg)}
+	s.err = &stepperError{s.line, fmt.Sprintf("unexpected %q, %s", c, msg)}
 	s.step = s.stateEnd
 	return stepEnd
 }
 
-func (s *stepper) stateEnd(r rune) stepperState {
+func (s *stepper) stateEnd(c byte) stepperState {
 	return stepEnd
 }
 
-func (s *stepper) stateBeginKey(r rune) stepperState {
+func (s *stepper) stateBeginKey(c byte) stepperState {
 	switch {
-	case isIdent(r):
+	case isIdent(c):
 		s.step = s.stateInKey
 		return stepBeginKey
 	default:
@@ -78,28 +78,28 @@ func (s *stepper) stateBeginKey(r rune) stepperState {
 	}
 }
 
-func (s *stepper) stateInKey(r rune) stepperState {
+func (s *stepper) stateInKey(c byte) stepperState {
 	switch {
-	case isIdent(r):
+	case isIdent(c):
 		return stepContinue
 	default:
 		s.step = s.stateEqualOrEmptyKey
-		return s.step(r)
+		return s.step(c)
 	}
 }
 
-func (s *stepper) stateInIdentValue(r rune) stepperState {
+func (s *stepper) stateInIdentValue(c byte) stepperState {
 	switch {
-	case isIdent(r):
+	case isIdent(c):
 		return stepContinue
 	default:
 		s.step = s.stateBeginKey
-		return s.step(r)
+		return s.step(c)
 	}
 }
 
-func (s *stepper) stateEqualOrEmptyKey(r rune) stepperState {
-	switch r {
+func (s *stepper) stateEqualOrEmptyKey(c byte) stepperState {
+	switch c {
 	case '=':
 		s.step = s.stateBeginValue
 		return stepEqual
@@ -107,12 +107,12 @@ func (s *stepper) stateEqualOrEmptyKey(r rune) stepperState {
 		s.step = s.stateBeginKey
 		return stepSkip
 	default:
-		return s.errorf(r, `expected "="`)
+		return s.errorf(c, `expected "="`)
 	}
 }
 
-func (s *stepper) stateBeginValue(r rune) stepperState {
-	switch r {
+func (s *stepper) stateBeginValue(c byte) stepperState {
+	switch c {
 	case '"':
 		s.step = s.stateInStringValue
 		return stepBeginValue
@@ -120,16 +120,16 @@ func (s *stepper) stateBeginValue(r rune) stepperState {
 		s.step = s.stateBeginKey
 		return stepSkip
 	default:
-		if isIdent(r) {
+		if isIdent(c) {
 			s.step = s.stateInIdentValue
 			return stepBeginValue
 		}
-		return s.errorf(r, `expected IDENT or STRING`)
+		return s.errorf(c, `expected IDENT or STRING`)
 	}
 }
 
-func (s *stepper) stateInStringValue(r rune) stepperState {
-	switch r {
+func (s *stepper) stateInStringValue(c byte) stepperState {
+	switch c {
 	case '"':
 		s.step = s.stateBeginKey
 		return stepContinue
@@ -141,16 +141,16 @@ func (s *stepper) stateInStringValue(r rune) stepperState {
 	}
 }
 
-func (s *stepper) stateInStringESC(r rune) stepperState {
+func (s *stepper) stateInStringESC(c byte) stepperState {
 	s.step = s.stateInStringValue
 	return stepContinue
 }
 
-func isIdent(r rune) bool {
-	switch r {
+func isIdent(c byte) bool {
+	switch c {
 	case '=', '"':
 		return false
 	default:
-		return r > ' '
+		return c > ' '
 	}
 }
