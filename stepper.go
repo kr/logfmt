@@ -41,26 +41,12 @@ func (err *stepperError) Error() string {
 
 type stepper struct {
 	step func(c byte) stepperState
-	err  error
-	line int
 }
 
-// newline increments the line number for error reporting and resets the
-// stepner.
-func (s *stepper) newline() {
-	s.line++
-	s.reset()
-}
-
-func (s *stepper) reset() {
+func newStepper() *stepper {
+	s := new(stepper)
 	s.step = s.stateBeginKey
-}
-
-func (s *stepper) errorf(c byte, msg string, args ...interface{}) stepperState {
-	msg = fmt.Sprintf(msg, args...)
-	s.err = &stepperError{s.line, fmt.Sprintf("unexpected %q, %s", c, msg)}
-	s.step = s.stateEnd
-	return stepEnd
+	return s
 }
 
 func (s *stepper) stateEnd(c byte) stepperState {
@@ -103,11 +89,9 @@ func (s *stepper) stateEqualOrEmptyKey(c byte) stepperState {
 	case '=':
 		s.step = s.stateBeginValue
 		return stepEqual
-	case ' ':
+	default:
 		s.step = s.stateBeginKey
 		return stepSkip
-	default:
-		return s.errorf(c, `expected "="`)
 	}
 }
 
@@ -116,15 +100,13 @@ func (s *stepper) stateBeginValue(c byte) stepperState {
 	case '"':
 		s.step = s.stateInStringValue
 		return stepBeginValue
-	case ' ':
-		s.step = s.stateBeginKey
-		return stepSkip
 	default:
 		if isIdent(c) {
 			s.step = s.stateInIdentValue
 			return stepBeginValue
 		}
-		return s.errorf(c, `expected IDENT or STRING`)
+		s.step = s.stateBeginKey
+		return stepSkip
 	}
 }
 

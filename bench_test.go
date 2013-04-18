@@ -9,10 +9,7 @@ func BenchmarkScanner(b *testing.B) {
 
 	b.StopTimer()
 	s := new(stepper)
-	s.reset()
 	for i := 0; i < b.N; i++ {
-		s.reset()
-
 		b.StartTimer()
 		for _, c := range data {
 			s.step(c)

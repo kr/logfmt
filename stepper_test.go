@@ -77,15 +77,11 @@ func TestStepperSimple(t *testing.T) {
 		{' ', stepSkip},
 	}
 
-	s := new(stepper)
-	s.reset()
+	s := newStepper()
 	for i, test := range tests {
 		t.Logf("%q", test.c)
 		g := s.step(test.c)
 		if test.w != g {
-			if s.err != nil {
-				t.Error(s.err)
-			}
 			t.Fatalf("at %d %q: want %s, got %s", i, test.c, test.w, g)
 		}
 	}
