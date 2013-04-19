@@ -4,7 +4,7 @@ type scannerType int
 
 const (
 	scanKey scannerType = iota
-	scanValue
+	scanVal
 	scanEnd
 )
 
@@ -29,7 +29,7 @@ func (sc *scanner) next() (scannerType, []byte) {
 		case stepBeginValue:
 			mark := sc.off
 			sc.scanWhile(stepContinue)
-			return scanValue, sc.b[mark:sc.off]
+			return scanVal, sc.b[mark:sc.off]
 		case stepEnd:
 			return scanEnd, nil
 		default:
