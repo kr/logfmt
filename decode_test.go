@@ -5,9 +5,8 @@ import (
 )
 
 func TestDecodeSlice(t *testing.T) {
-	data := []byte(`a=foo b=10ms c=cat E="123"`)
+	data := []byte(`a=foo b=10ms c=cat E="123" d foo=`)
 
-	
 	type T struct {
 		Key string
 		Val string
@@ -18,16 +17,19 @@ func TestDecodeSlice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if g := len(d); g != 4 {
-		t.Errorf("want 3, got %d", g)	
-	}
-
 	tests := []T{
 		{"a", "foo"},
 		{"b", "10ms"},
 		{"c", "cat"},
 		{"E", "123"},
+		{"d", ""},
+		{"foo", ""},
 	}
+
+	if g := len(d); g != len(tests) {
+		t.Fatalf("want %d, got %d", len(tests), g)	
+	}
+
 	for i, w := range tests {
 		if g := d[i]; w != *g {
 			t.Errorf("want %v, got %v", w, *g)

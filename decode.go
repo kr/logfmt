@@ -40,16 +40,18 @@ func decodeSlice(s *scanner, b []byte, v reflect.Value) error {
 	}
 
 	for {
-		nv := reflect.New(t)
-
-		kv := nv.Elem().FieldByName("Key")
-		if !kv.IsValid()  {
-			panic("no key field")
-		}
-
 		tk, key := s.next()
 		if tk == scanEnd {
 			return nil
+		}
+
+newkey:
+		nv := reflect.New(t)
+
+		println("key:", string(key))
+		kv := nv.Elem().FieldByName("Key")
+		if !kv.IsValid()  {
+			panic("no key field")
 		}
 
 		if err := decodeValue(key, kv); err != nil {
@@ -58,8 +60,20 @@ func decodeSlice(s *scanner, b []byte, v reflect.Value) error {
 
 		// pluck out the value regardless of the users desire for it
 		tk, val := s.next()
-		if tk == scanEnd {
+		switch tk {
+		case scanEnd:
+			if !ptr {
+				nv = reflect.Indirect(nv)
+			}
+			v.Set(reflect.Append(v, nv))
 			return nil
+		case scanKey:
+			if !ptr {
+				nv = reflect.Indirect(nv)
+			}
+			v.Set(reflect.Append(v, nv))
+			key = val
+			goto newkey
 		}
 
 		vv := nv.Elem().FieldByName("Val")
