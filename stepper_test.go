@@ -86,3 +86,11 @@ func TestStepperSimple(t *testing.T) {
 		}
 	}
 }
+
+func TestBlake(t *testing.T) {
+	data := []byte(`a=1 b="bar" ƒ=2h3s`)
+	s := newStepper()
+	for _, c := range data {
+		t.Error(s.step(c))
+	}
+}
