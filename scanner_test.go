@@ -10,14 +10,14 @@ func TestScannerSimple(t *testing.T) {
 
 	type T struct {
 		ty scannerType
-		v string
+		v  string
 	}
 
 	var tests = []T{
 		{scanKey, "a"},
 		{scanVal, "1"},
 		{scanKey, "b"},
-		{scanVal, "bar"},
+		{scanVal, "\"bar\""},
 		{scanKey, "ƒ"},
 		{scanVal, "2h3s"},
 		{scanEnd, ""},
