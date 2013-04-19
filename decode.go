@@ -47,9 +47,8 @@ func decodeSlice(s *scanner, b []byte, v reflect.Value) error {
 
 newkey:
 		nv := reflect.New(t)
-
-		println("key:", string(key))
 		kv := nv.Elem().FieldByName("Key")
+		// should check this before entering loop with Type
 		if !kv.IsValid()  {
 			panic("no key field")
 		}
@@ -77,6 +76,7 @@ newkey:
 		}
 
 		vv := nv.Elem().FieldByName("Val")
+		// should check this before entering loop with Type
 		if vv.IsValid() {
 			if err := decodeValue(val, vv); err != nil {
 				return err
