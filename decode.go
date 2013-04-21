@@ -115,10 +115,13 @@ func (em *defaultEmitter) HandleLogfmt(key, val []byte) error {
 			continue
 		}
 		if fv.Kind() == reflect.Ptr {
-			t := fv.Type().Elem()
-			v := reflect.New(t)
-			fv.Set(v)
-			fv = v.Elem()
+			if fv.IsNil() {
+				t := fv.Type().Elem()
+				v := reflect.New(t)
+				fv.Set(v)
+				fv = v
+			}
+			fv = fv.Elem()
 		}
 		switch fv.Interface().(type) {
 		case time.Duration:
