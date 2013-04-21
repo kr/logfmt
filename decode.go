@@ -39,7 +39,10 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 // string
 // bool - true if key is present, false otherwise (the value is ignored).
 //
-// If v is not an pointer to an Handler or struct, Unmarshal will return an
+// If a field is a pointer to an above type, and a matching key is not present
+// in the logfmt data, the pointer will be untouched.
+//
+// If v is not a pointer to an Handler or struct, Unmarshal will return an
 // error.
 func Unmarshal(b []byte, v interface{}) (err error) {
 	saveError := func(e error) {
