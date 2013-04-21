@@ -32,6 +32,13 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 // the struct's fields (either the struct field name or its tag), preferring an
 // exact match but also accepting a case-insensitive match.
 //
+// Field types supported by Unmarshal are:
+//
+// all numeric types (e.g. float32, int, etc.)
+// []byte
+// string
+// bool - true if key is present, false otherwise (the value is ignored).
+//
 // If v is not an pointer to an Handler or struct, Unmarshal will return an
 // error.
 func Unmarshal(b []byte, v interface{}) (err error) {
