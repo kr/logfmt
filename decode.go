@@ -133,7 +133,9 @@ func (em *defaultEmitter) HandleLogfmt(key, val []byte) error {
 		case string:
 			fv.SetString(string(val))
 		case []byte:
-			fv.SetBytes(val)
+			b := make([]byte, len(val))
+			copy(b, val)
+			fv.SetBytes(b)
 		case bool:
 			fv.SetBool(true)
 		default:
