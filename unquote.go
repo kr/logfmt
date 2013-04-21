@@ -7,11 +7,31 @@ import (
 	"unicode/utf8"
 )
 
-// Everything in here came from encoding/json in Go's stdlib.
+// Taken from Go's encoding/json
 
-func unquote(s string) string {
-	b, _ := unquoteBytes([]byte(s))
-	return string(b)
+// Copyright 2010 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// getu4 decodes \uXXXX from the beginning of s, returning the hex value,
+// or it returns -1.
+func getu4(s []byte) rune {
+	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
+		return -1
+	}
+	r, err := strconv.ParseUint(string(s[2:6]), 16, 64)
+	if err != nil {
+		return -1
+	}
+	return rune(r)
+}
+
+// unquote converts a quoted JSON string literal s into an actual string t.
+// The rules are different than for Go, so cannot use strconv.Unquote.
+func unquote(s []byte) (t string, ok bool) {
+	s, ok = unquoteBytes(s)
+	t = string(s)
+	return
 }
 
 func unquoteBytes(s []byte) (t []byte, ok bool) {
@@ -126,17 +146,4 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 		}
 	}
 	return b[0:w], true
-}
-
-// getu4 decodes \uXXXX from the beginning of s, returning the hex value,
-// or it returns -1.
-func getu4(s []byte) rune {
-	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
-		return -1
-	}
-	r, err := strconv.ParseUint(string(s[2:6]), 16, 64)
-	if err != nil {
-		return -1
-	}
-	return rune(r)
 }

@@ -1,119 +1,68 @@
 package logfmt
 
-import (
-	"errors"
-	"unicode"
-	"unicode/utf8"
+type scannerType int
+
+func (t scannerType) String() string {
+	return scannerStateStrings[int(t)]
+}
+
+const (
+	scanKey scannerType = iota
+	scanEqual
+	scanVal
+	scanEnd
 )
 
-var (
-	ErrInvalidSyntax = errors.New("invalid syntax")
-)
+var scannerStateStrings = []string{
+	"scanKey",
+	"scanEqual",
+	"scanVal",
+	"scanEnd",
+}
 
 type scanner struct {
-	b []byte
-	r rune
-	i int
-	n int
+	s   *stepper
+	b   []byte
+	off int
+	ss  stepperState
 }
 
 func newScanner(b []byte) *scanner {
-	return &scanner{b: b, r: ' '}
+	return &scanner{b: b, s: newStepper(), ss: stepSkip}
 }
 
-func (s *scanner) scan() (token, string, error) {
+func (sc *scanner) next() (scannerType, []byte) {
 	for {
-		s.skipWhitespace()
-
-		switch r := s.r; {
-		case unicode.IsDigit(r):
-			n := s.scanNumber()
-			if unicode.IsLetter(s.r) {
-				return tValue, n + s.scanUnit(), nil
-			}
-			return tNumber, n, nil
-		case unicode.IsLetter(r):
-			return tIdent, s.scanIdent(), nil
+		switch sc.ss {
+		case stepBeginKey:
+			mark := sc.off - 1
+			sc.scanWhile(stepContinue)
+			return scanKey, sc.b[mark : sc.off-1]
+		case stepBeginValue:
+			mark := sc.off - 1
+			sc.scanWhile(stepContinue)
+			return scanVal, sc.b[mark : sc.off-1]
+		case stepEqual:
+			sc.scanWhile(stepEqual)
+			return scanEqual, nil
+		case stepEnd:
+			return scanEnd, nil
 		default:
-			s.next()
-			switch r {
-			case -1:
-				return tEOF, "", nil
-			case '"':
-				return s.scanString()
-			case '=':
-				return tEqual, "", nil
-			default:
-				return tError, "", ErrInvalidSyntax
-			}
+			sc.scanWhile(stepSkip)
 		}
 	}
-	panic("not reached")
 }
 
-func (s *scanner) next() {
-	s.i += s.n
-	if s.i == len(s.b) {
-		s.r, s.n = -1, 0
-		return
-	}
-	s.r, s.n = utf8.DecodeRune(s.b[s.i:])
-	return
-}
-
-func (s *scanner) skipWhitespace() {
-	for unicode.IsSpace(s.r) {
-		s.next()
-	}
-}
-
-func (s *scanner) scanString() (token, string, error) {
-	m := s.i - 1
-	s.next()
-	for s.r != '"' {
-		r := s.r
-		s.next()
-		if r == '\n' || r < 0 {
-			return tError, "", errors.New("unterminated string")
-		}
-		if r == '\\' {
-			s.scanEscape()
+func (sc *scanner) scanWhile(what stepperState) {
+	for sc.off < len(sc.b) {
+		sc.ss = sc.s.step(sc.s, sc.b[sc.off])
+		sc.off++
+		if sc.ss != what {
+			return
 		}
 	}
-	s.next()
-	return tString, string(s.b[m:s.i]), nil
-}
-
-func (s *scanner) scanEscape() error {
-	r := s.r
-	s.next()
-	if r != '"' {
-		return errors.New("invalid escape")
+	if sc.off == len(sc.b) {
+		sc.off++
 	}
-	return nil
-}
-
-func (s *scanner) scanNumber() string {
-	// TODO: support 1e9 and fractions
-	m := s.i
-	for unicode.IsDigit(s.r) {
-		s.next()
-	}
-	return string(s.b[m:s.i])
-}
-
-func (s *scanner) scanIdent() string {
-	m := s.i
-	for unicode.IsLetter(s.r) || unicode.IsDigit(s.r) {
-		s.next()
-	}
-	return string(s.b[m:s.i])
-}
-
-func (s *scanner) scanUnit() string {
-	m := s.i
-	for unicode.IsLetter(s.r) {
-		s.next()
-	}
-	return string(s.b[m:s.i])
+	sc.ss = stepEnd
 }
