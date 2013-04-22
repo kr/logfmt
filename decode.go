@@ -114,7 +114,7 @@ func Unmarshal(b []byte, v interface{}) (err error) {
 	}
 }
 
-type defaultEmitter struct {
+type defaultHandler struct {
 	rv reflect.Value
 }
 
@@ -123,10 +123,10 @@ func newDefaultHandler(v interface{}) (Handler, error) {
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, &InvalidUnmarshalError{reflect.TypeOf(v)}
 	}
-	return &defaultEmitter{rv: rv}, nil
+	return &defaultHandler{rv: rv}, nil
 }
 
-func (em *defaultEmitter) HandleLogfmt(key, val []byte) error {
+func (em *defaultHandler) HandleLogfmt(key, val []byte) error {
 	el := em.rv.Elem()
 	skey := string(key)
 	for i := 0; i < el.NumField(); i++ {

@@ -7,7 +7,6 @@ import (
 
 func BenchmarkScanner(b *testing.B) {
 	data := []byte("measure.test=1 measure.foo=bar measure.time=2h")
-
 	b.StopTimer()
 	for i := 0; i < b.N; i++ {
 		s := newScanner(data)
@@ -24,16 +23,16 @@ func BenchmarkScanner(b *testing.B) {
 	}
 }
 
-type nopEmitter struct{}
+type nopHandler struct{}
 
-func (e *nopEmitter) EmitLogfmt(key, val []byte) error { return nil }
+func (h *nopHandler) HandleLogfmt(key, val []byte) error { return nil }
 
 func BenchmarkDecodeCustom(b *testing.B) {
 	data := []byte(`a=foo b=10ms c=cat E="123" d foo= emp=`)
 
-	e := new(nopEmitter)
+	h := new(nopHandler)
 	for i := 0; i < b.N; i++ {
-		if err := Unmarshal(data, e); err != nil {
+		if err := Unmarshal(data, h); err != nil {
 			panic(err)
 		}
 	}
