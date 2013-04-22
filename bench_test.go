@@ -7,25 +7,23 @@ import (
 
 func BenchmarkScanner(b *testing.B) {
 	data := []byte("measure.test=1 measure.foo=bar measure.time=2h")
-	b.StopTimer()
+	h := new(nopHandler)
 	for i := 0; i < b.N; i++ {
-		s := newScanner(data)
-		b.StartTimer()
-		for {
-			ty, _ := s.next()
-			if ty == scanEnd {
-				break
-			}
+		if err := gotoScanner(data, h); err != nil {
+			panic(err)
 		}
-		b.StopTimer()
-
 		b.SetBytes(int64(len(data)))
 	}
 }
 
-type nopHandler struct{}
+type nopHandler struct {
+	called bool
+}
 
-func (h *nopHandler) HandleLogfmt(key, val []byte) error { return nil }
+func (h *nopHandler) HandleLogfmt(key, val []byte) error {
+	h.called = true
+	return nil
+}
 
 func BenchmarkDecodeCustom(b *testing.B) {
 	data := []byte(`a=foo b=10ms c=cat E="123" d foo= emp=`)
@@ -35,6 +33,9 @@ func BenchmarkDecodeCustom(b *testing.B) {
 		if err := Unmarshal(data, h); err != nil {
 			panic(err)
 		}
+	}
+	if !h.called {
+		panic("handler not called")
 	}
 }
 

@@ -21,7 +21,6 @@
 package logfmt
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -65,53 +64,15 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 //
 // If v is not a pointer to an Handler or struct, Unmarshal will return an
 // error.
-func Unmarshal(b []byte, v interface{}) (err error) {
-	saveError := func(e error) {
-		if err == nil {
-			err = e
-		}
-	}
-
-	if len(b) == 0 {
-		return nil
-	}
-
-	em, ok := v.(Handler)
+func Unmarshal(data []byte, v interface{}) (err error) {
+	h, ok := v.(Handler)
 	if !ok {
-		em, err = newDefaultHandler(v)
+		h, err = newDefaultHandler(v)
 		if err != nil {
 			return err
 		}
 	}
-
-	s := newScanner(b)
-	for {
-		tk, key := s.next()
-		if tk == scanEnd {
-			return
-		}
-	gotkey:
-		tk, val := s.next()
-		switch tk {
-		case scanEnd:
-			saveError(em.HandleLogfmt(key, nil))
-			return
-		case scanKey:
-			saveError(em.HandleLogfmt(key, nil))
-			key = val
-			goto gotkey
-		case scanEqual:
-			goto gotkey
-		case scanVal:
-			if len(val) > 0 && val[0] == '"' {
-				val, ok = unquoteBytes(val)
-				if !ok {
-					saveError(fmt.Errorf("logfmt: error unquoting bytes %q", string(val)))
-				}
-			}
-			saveError(em.HandleLogfmt(key, val))
-		}
-	}
+	return gotoScanner(data, h)
 }
 
 type defaultHandler struct {

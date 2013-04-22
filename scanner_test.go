@@ -1,42 +1,35 @@
 package logfmt
 
 import (
+	"reflect"
 	"testing"
 )
 
 func TestScannerSimple(t *testing.T) {
 	data := []byte(`a=1 b="bar" ƒ=2h3s d x=`)
-	sc := newScanner(data)
 
 	type T struct {
-		ty scannerType
-		v  string
+		k string
+		v string
 	}
 
-	var tests = []T{
-		{scanKey, "a"},
-		{scanEqual, ""},
-		{scanVal, "1"},
-		{scanKey, "b"},
-		{scanEqual, ""},
-		{scanVal, "\"bar\""},
-		{scanKey, "ƒ"},
-		{scanEqual, ""},
-		{scanVal, "2h3s"},
-		{scanKey, "d"},
-		{scanKey, "x"},
-		{scanEqual, ""},
-		{scanEnd, ""},
+	var want = []T{
+		{"a", "1"},
+		{"b", "bar"},
+		{"ƒ", "2h3s"},
+		{"d", ""},
+		{"x", ""},
 	}
 
-	for i, test := range tests {
-		ty, v := sc.next()
-		t.Log("test", i)
-		if test.ty != ty {
-			t.Errorf("want type %s, got %s", test.ty, ty)
-		}
-		if g := string(v); test.v != g {
-			t.Errorf("want val %q, got %q", test.v, g)
-		}
+	var got []T
+
+	h := func(key, val []byte) error {
+		got = append(got, T{string(key), string(val)})
+		return nil
+	}
+	gotoScanner(data, HandlerFunc(h))
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }

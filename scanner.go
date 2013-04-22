@@ -1,68 +1,134 @@
 package logfmt
 
-type scannerType int
-
-func (t scannerType) String() string {
-	return scannerStateStrings[int(t)]
-}
-
-const (
-	scanKey scannerType = iota
-	scanEqual
-	scanVal
-	scanEnd
+import (
+	"fmt"
 )
 
-var scannerStateStrings = []string{
-	"scanKey",
-	"scanEqual",
-	"scanVal",
-	"scanEnd",
-}
-
-type scanner struct {
-	s   *stepper
-	b   []byte
-	off int
-	ss  stepperState
-}
-
-func newScanner(b []byte) *scanner {
-	return &scanner{b: b, s: newStepper(), ss: stepSkip}
-}
-
-func (sc *scanner) next() (scannerType, []byte) {
-	for {
-		switch sc.ss {
-		case stepBeginKey:
-			mark := sc.off - 1
-			sc.scanWhile(stepContinue)
-			return scanKey, sc.b[mark : sc.off-1]
-		case stepBeginValue:
-			mark := sc.off - 1
-			sc.scanWhile(stepContinue)
-			return scanVal, sc.b[mark : sc.off-1]
-		case stepEqual:
-			sc.scanWhile(stepEqual)
-			return scanEqual, nil
-		case stepEnd:
-			return scanEnd, nil
-		default:
-			sc.scanWhile(stepSkip)
+func gotoScanner(data []byte, h Handler) (err error) {
+	saveError := func(e error) {
+		if err == nil {
+			err = e
 		}
 	}
-}
 
-func (sc *scanner) scanWhile(what stepperState) {
-	for sc.off < len(sc.b) {
-		sc.ss = sc.s.step(sc.s, sc.b[sc.off])
-		sc.off++
-		if sc.ss != what {
-			return
+	var c byte
+	var i int
+	var m int
+	var key []byte
+	var val []byte
+	var ok bool
+
+garbage:
+	if i == len(data) {
+		goto eof
+	}
+
+	c = data[i]
+	switch {
+	case c > ' ' && c != '"' && c != '=':
+		m = -1
+		goto key
+	default:
+		i++
+		goto garbage
+	}
+
+key:
+	if i >= len(data) {
+		goto eof
+	}
+
+	key, val = nil, nil
+	c = data[i]
+	switch {
+	case c > ' ' && c != '"' && c != '=':
+		if m < 0 {
+			m = i
 		}
+		i++
+		goto key
+	case c == '=':
+		key = data[m:i]
+		i++
+		goto value
+	default:
+		if m >= 0 {
+			key = data[m:i]
+			saveError(h.HandleLogfmt(key, nil))
+		}
+		i++
+		goto garbage
 	}
-	if sc.off == len(sc.b) {
-		sc.off++
+
+value:
+	if i >= len(data) {
+		goto eof
 	}
-	sc.ss = stepEnd
+
+	c = data[i]
+	switch {
+	case c > ' ' && c != '"' && c != '=':
+		m = i
+		i++
+		goto ivalue
+	case c == '"':
+		m = i
+		i++
+		goto qvalue
+	default:
+		if key != nil {
+			saveError(h.HandleLogfmt(key, val))
+		}
+		i++
+		goto garbage
+	}
+
+ivalue:
+	if i >= len(data) {
+		goto eof
+	}
+
+	c = data[i]
+	switch {
+	case c > ' ' && c != '"' && c != '=':
+		i++
+		goto ivalue
+	default:
+		val = data[m:i]
+		saveError(h.HandleLogfmt(key, val))
+		i++
+		goto garbage
+	}
+
+qvalue:
+	if i >= len(data) {
+		goto eof
+	}
+
+	c = data[i]
+	switch c {
+	case '\\':
+		i += 2
+		goto qvalue
+	case '"':
+		i++
+		val = data[m:i]
+		val, ok = unquoteBytes(val)
+		if !ok {
+			saveError(fmt.Errorf("logfmt: error unquoting bytes %q", string(val)))
+		} else {
+			saveError(h.HandleLogfmt(key, val))
+		}
+		goto garbage
+	default:
+		i++
+		goto qvalue
+	}
+
+eof:
+	if key != nil {
+		saveError(h.HandleLogfmt(key, val))
+	}
+
+	return
 }
