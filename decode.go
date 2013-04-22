@@ -1,3 +1,19 @@
+// Package implements the decoding of logfmt key-value pairs.
+//
+// Example logfmt message:
+//
+//	foo=bar a=14 baz="hello kitty" cool%story=bro f %^asdf
+//
+// EBNFish:
+//
+// 	ident_byte = any byte greater than ' ', excluding '=', '"'
+// 	string_byte = any byte excluding '"' and '\'
+// 	garbage = !ident_byte
+// 	ident = ident_byte, { ident byte }
+// 	key = ident
+// 	value = ident | '"', { string_byte | '\', '"' }, '"'
+// 	pair = key, '=', value | key, '=' | key
+// 	message = { garbage, pair }, garbage
 package logfmt
 
 import (
