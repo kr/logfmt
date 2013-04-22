@@ -54,10 +54,10 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 //
 // Field types supported by Unmarshal are:
 //
-// all numeric types (e.g. float32, int, etc.)
-// []byte
-// string
-// bool - true if key is present, false otherwise (the value is ignored).
+// 	all numeric types (e.g. float32, int, etc.)
+// 	[]byte
+// 	string
+// 	bool - true if key is present, false otherwise (the value is ignored).
 //
 // If a field is a pointer to an above type, and a matching key is not present
 // in the logfmt data, the pointer will be untouched.
