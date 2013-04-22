@@ -129,10 +129,5 @@ func stateInStringESC(s *stepper, c byte) stepperState {
 }
 
 func isIdent(c byte) bool {
-	switch c {
-	case '=', '"':
-		return false
-	default:
-		return c > ' '
-	}
+	return c > ' ' && c != '=' && c != '"'
 }
