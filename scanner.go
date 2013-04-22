@@ -27,6 +27,7 @@ garbage:
 	switch {
 	case c > ' ' && c != '"' && c != '=':
 		m = -1
+		key, val = nil, nil
 		goto key
 	default:
 		i++
@@ -38,7 +39,6 @@ key:
 		goto eof
 	}
 
-	key, val = nil, nil
 	c = data[i]
 	switch {
 	case c > ' ' && c != '"' && c != '=':
