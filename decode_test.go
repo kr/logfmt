@@ -54,7 +54,7 @@ func TestDecodeDefault(t *testing.T) {
 		This   int `logfmt:"that"`
 	}
 
-	em, err := newDefaultHandler(&g)
+	em, err := NewStructHandler(&g)
 	if err != nil {
 		t.Fatal(err)
 	}

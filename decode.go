@@ -47,11 +47,24 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 // pointed to by v. If v is an Handler, HandleLogfmt will be called for each
 // key-value pair.
 //
-// To unmarshal logfmt into a struct, Unmarshal matches incoming keys to the
-// the struct's fields (either the struct field name or its tag), preferring an
-// exact match but also accepting a case-insensitive match.
+// If v is not a Handler, it will pass v to NewStructHandler and use the
+// returned StructHandler for decoding.
+func Unmarshal(data []byte, v interface{}) (err error) {
+	h, ok := v.(Handler)
+	if !ok {
+		h, err = NewStructHandler(v)
+		if err != nil {
+			return err
+		}
+	}
+	return gotoScanner(data, h)
+}
+
+// StructHandler unmarshals logfmt into a struct. It matches incoming keys to
+// the the struct's fields (either the struct field name or its tag, preferring
+// an exact match but also accepting a case-insensitive match.
 //
-// Field types supported by Unmarshal are:
+// Field types supported by StructHandler are:
 //
 // 	all numeric types (e.g. float32, int, etc.)
 // 	[]byte
@@ -64,31 +77,20 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 //
 // If v is not a pointer to an Handler or struct, Unmarshal will return an
 // error.
-func Unmarshal(data []byte, v interface{}) (err error) {
-	h, ok := v.(Handler)
-	if !ok {
-		h, err = newDefaultHandler(v)
-		if err != nil {
-			return err
-		}
-	}
-	return gotoScanner(data, h)
-}
-
-type defaultHandler struct {
+type StructHandler struct {
 	rv reflect.Value
 }
 
-func newDefaultHandler(v interface{}) (Handler, error) {
+func NewStructHandler(v interface{}) (Handler, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, &InvalidUnmarshalError{reflect.TypeOf(v)}
 	}
-	return &defaultHandler{rv: rv}, nil
+	return &StructHandler{rv: rv}, nil
 }
 
-func (em *defaultHandler) HandleLogfmt(key, val []byte) error {
-	el := em.rv.Elem()
+func (h *StructHandler) HandleLogfmt(key, val []byte) error {
+	el := h.rv.Elem()
 	skey := string(key)
 	for i := 0; i < el.NumField(); i++ {
 		fv := el.Field(i)
