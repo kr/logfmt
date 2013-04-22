@@ -75,6 +75,14 @@ func TestStepperSimple(t *testing.T) {
 		{'%', stepContinue},
 		{' ', stepSkip},
 		{' ', stepSkip},
+		{'a', stepBeginKey},
+		{'=', stepEqual},
+		{'"', stepBeginValue},
+		{'b', stepContinue},
+		{'"', stepContinue},
+		{'b', stepBeginKey},
+		{' ', stepSkip},
+		{' ', stepSkip},
 	}
 
 	s := newStepper()
