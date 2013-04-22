@@ -93,7 +93,11 @@ func (em *defaultHandler) HandleLogfmt(key, val []byte) error {
 	for i := 0; i < el.NumField(); i++ {
 		fv := el.Field(i)
 		ft := el.Type().Field(i)
-		if !strings.EqualFold(ft.Name, skey) {
+		switch {
+		case ft.Name == skey:
+		case ft.Tag.Get("logfmt") == skey:
+		case strings.EqualFold(ft.Name, skey):
+		default:
 			continue
 		}
 		if fv.Kind() == reflect.Ptr {

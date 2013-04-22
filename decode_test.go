@@ -51,6 +51,7 @@ func TestDecodeDefault(t *testing.T) {
 		D      time.Duration
 		NB     *[]byte
 		Here   bool
+		This   int `logfmt:"that"`
 	}
 
 	em, err := newDefaultHandler(&g)
@@ -70,6 +71,7 @@ func TestDecodeDefault(t *testing.T) {
 		{"d", "1h", 1 * time.Hour},
 		{"nb", "bytes!", []byte("bytes!")},
 		{"here", "", true},
+		{"that", "5", 5},
 	}
 
 	rv := reflect.Indirect(reflect.ValueOf(&g))
