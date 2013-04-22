@@ -4,6 +4,10 @@
 //
 //	foo=bar a=14 baz="hello kitty" cool%story=bro f %^asdf
 //
+// Result:
+//
+//	{ "foo": "bar", "baz": "hello kitty", "cool%story": "bro", "f": "", "%^asdf": "" }
+//
 // EBNFish:
 //
 // 	ident_byte = any byte greater than ' ', excluding '=', '"'
