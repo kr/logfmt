@@ -58,6 +58,7 @@ func (f HandlerFunc) HandleLogfmt(key, val []byte) error {
 // 	[]byte
 // 	string
 // 	bool - true if key is present, false otherwise (the value is ignored).
+//	time.Duration - uses time.ParseDuration
 //
 // If a field is a pointer to an above type, and a matching key is not present
 // in the logfmt data, the pointer will be untouched.
