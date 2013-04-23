@@ -17,6 +17,7 @@ func gotoScanner(data []byte, h Handler) (err error) {
 	var key []byte
 	var val []byte
 	var ok bool
+	var esc bool
 
 garbage:
 	if i == len(data) {
@@ -74,6 +75,7 @@ value:
 	case c == '"':
 		m = i
 		i++
+		esc = false
 		goto qvalue
 	default:
 		if key != nil {
@@ -109,16 +111,21 @@ qvalue:
 	switch c {
 	case '\\':
 		i += 2
+		esc = true
 		goto qvalue
 	case '"':
 		i++
 		val = data[m:i]
-		val, ok = unquoteBytes(val)
-		if !ok {
-			saveError(fmt.Errorf("logfmt: error unquoting bytes %q", string(val)))
+		if esc {
+			val, ok = unquoteBytes(val)
+			if !ok {
+				saveError(fmt.Errorf("logfmt: error unquoting bytes %q", string(val)))
+				goto garbage
+			}
 		} else {
-			saveError(h.HandleLogfmt(key, val))
+			val = val[1 : len(val)-1]
 		}
+		saveError(h.HandleLogfmt(key, val))
 		goto garbage
 	default:
 		i++

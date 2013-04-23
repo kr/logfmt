@@ -6,7 +6,7 @@ import (
 )
 
 func TestScannerSimple(t *testing.T) {
-	data := []byte(`a=1 b="bar" ƒ=2h3s d x=`)
+	data := []byte(`a=1 b="bar" ƒ=2h3s r="esc\t" d x=`)
 
 	type T struct {
 		k string
@@ -17,6 +17,7 @@ func TestScannerSimple(t *testing.T) {
 		{"a", "1"},
 		{"b", "bar"},
 		{"ƒ", "2h3s"},
+		{"r", "esc\t"},
 		{"d", ""},
 		{"x", ""},
 	}
