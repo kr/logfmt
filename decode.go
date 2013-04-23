@@ -6,7 +6,7 @@
 //
 // Result:
 //
-//	{ "foo": "bar", "a": "14", "baz": "hello kitty", "cool%story": "bro", "f": "", "%^asdf": "" }
+//	{ "foo": "bar", "a": 14, "baz": "hello kitty", "cool%story": "bro", "f": "", "%^asdf": "" }
 //
 // EBNFish:
 //
