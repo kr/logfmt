@@ -28,10 +28,9 @@ func gotoScanner(data []byte, h Handler) (err error) {
 	var val []byte
 	var ok bool
 	var esc bool
-	var cs int
 
+	cs := sGarbage
 garbage:
-	cs = sGarbage
 	if i == len(data) {
 		goto eof
 	}
@@ -42,6 +41,7 @@ garbage:
 		key, val = nil, nil
 		m = i
 		i++
+		cs = sKey
 		goto key
 	default:
 		i++
@@ -49,7 +49,6 @@ garbage:
 	}
 
 key:
-	cs = sKey
 	if i >= len(data) {
 		goto eof
 	}
@@ -62,16 +61,17 @@ key:
 	case c == '=':
 		key = data[m:i]
 		i++
+		cs = sEqual
 		goto equal
 	default:
 		key = data[m:i]
 		i++
 		saveError(h.HandleLogfmt(key, nil))
+		cs = sGarbage
 		goto garbage
 	}
 
 equal:
-	cs = sEqual
 	if i >= len(data) {
 		goto eof
 	}
@@ -81,24 +81,25 @@ equal:
 	case c > ' ' && c != '"' && c != '=':
 		m = i
 		i++
+		cs = sIdentValue
 		goto ivalue
 	case c == '"':
 		m = i
 		i++
 		esc = false
+		cs = sQuotedValue
 		goto qvalue
 	default:
 		if key != nil {
 			saveError(h.HandleLogfmt(key, val))
 		}
 		i++
+		cs = sGarbage
 		goto garbage
 	}
 
 ivalue:
-	cs = sIdentValue
 	if i >= len(data) {
-		val = data[m:i]
 		goto eof
 	}
 
@@ -111,11 +112,11 @@ ivalue:
 		val = data[m:i]
 		saveError(h.HandleLogfmt(key, val))
 		i++
+		cs = sGarbage
 		goto garbage
 	}
 
 qvalue:
-	cs = sQuotedValue
 	if i >= len(data) {
 		goto eof
 	}
@@ -133,12 +134,14 @@ qvalue:
 			val, ok = unquoteBytes(val)
 			if !ok {
 				saveError(fmt.Errorf("logfmt: error unquoting bytes %q", string(val)))
+				cs = sGarbage
 				goto garbage
 			}
 		} else {
 			val = val[1 : len(val)-1]
 		}
 		saveError(h.HandleLogfmt(key, val))
+		cs = sGarbage
 		goto garbage
 	default:
 		i++
@@ -155,7 +158,7 @@ eof:
 		saveError(h.HandleLogfmt(key, nil))
 	case sIdentValue:
 		val = data[m:i]
-		saveError(h.HandleLogfmt(key, nil))
+		saveError(h.HandleLogfmt(key, val))
 	case sQuotedValue:
 		saveError(io.ErrUnexpectedEOF)
 	}

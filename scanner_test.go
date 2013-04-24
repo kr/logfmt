@@ -26,6 +26,10 @@ func TestScannerSimple(t *testing.T) {
 				{"x", "sf"},
 			},
 		},
+		{`x= `, []T{{"x", ""}}},
+		{`y=`, []T{{"y", ""}}},
+		{`y`, []T{{"y", ""}}},
+		{`y=f`, []T{{"y", "f"}}},
 	}
 
 	for _, test := range tests {
