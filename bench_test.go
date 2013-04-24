@@ -6,13 +6,15 @@ import (
 )
 
 func BenchmarkScanner(b *testing.B) {
+	b.StopTimer()
 	data := []byte("measure.test=1 measure.foo=bar measure.time=2h measure=\"foo\"")
 	h := new(nopHandler)
+	b.SetBytes(int64(len(data)))
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		if err := gotoScanner(data, h); err != nil {
 			panic(err)
 		}
-		b.SetBytes(int64(len(data)))
 	}
 }
 
