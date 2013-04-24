@@ -2,6 +2,16 @@ package logfmt
 
 import (
 	"fmt"
+	"io"
+)
+
+const (
+	sGarbage = iota
+	sKey
+	sEqual
+	sValue
+	sIdentValue
+	sQuotedValue
 )
 
 func gotoScanner(data []byte, h Handler) (err error) {
@@ -18,8 +28,10 @@ func gotoScanner(data []byte, h Handler) (err error) {
 	var val []byte
 	var ok bool
 	var esc bool
+	var cs int
 
 garbage:
+	cs = sGarbage
 	if i == len(data) {
 		goto eof
 	}
@@ -27,8 +39,9 @@ garbage:
 	c = data[i]
 	switch {
 	case c > ' ' && c != '"' && c != '=':
-		m = -1
 		key, val = nil, nil
+		m = i
+		i++
 		goto key
 	default:
 		i++
@@ -36,6 +49,7 @@ garbage:
 	}
 
 key:
+	cs = sKey
 	if i >= len(data) {
 		goto eof
 	}
@@ -43,25 +57,21 @@ key:
 	c = data[i]
 	switch {
 	case c > ' ' && c != '"' && c != '=':
-		if m < 0 {
-			m = i
-		}
 		i++
 		goto key
 	case c == '=':
 		key = data[m:i]
 		i++
-		goto value
+		goto equal
 	default:
-		if m >= 0 {
-			key = data[m:i]
-			saveError(h.HandleLogfmt(key, nil))
-		}
+		key = data[m:i]
 		i++
+		saveError(h.HandleLogfmt(key, nil))
 		goto garbage
 	}
 
-value:
+equal:
+	cs = sEqual
 	if i >= len(data) {
 		goto eof
 	}
@@ -86,7 +96,9 @@ value:
 	}
 
 ivalue:
+	cs = sIdentValue
 	if i >= len(data) {
+		val = data[m:i]
 		goto eof
 	}
 
@@ -103,6 +115,7 @@ ivalue:
 	}
 
 qvalue:
+	cs = sQuotedValue
 	if i >= len(data) {
 		goto eof
 	}
@@ -133,9 +146,18 @@ qvalue:
 	}
 
 eof:
-	if key != nil {
-		saveError(h.HandleLogfmt(key, val))
+	switch cs {
+	case sEqual:
+		i--
+		fallthrough
+	case sKey:
+		key = data[m:i]
+		saveError(h.HandleLogfmt(key, nil))
+	case sIdentValue:
+		val = data[m:i]
+		saveError(h.HandleLogfmt(key, nil))
+	case sQuotedValue:
+		saveError(io.ErrUnexpectedEOF)
 	}
-
 	return
 }

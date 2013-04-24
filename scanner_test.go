@@ -6,7 +6,7 @@ import (
 )
 
 func TestScannerSimple(t *testing.T) {
-	data := []byte(`a=1 b="bar" ƒ=2h3s r="esc\t" d x=`)
+	data := []byte(`a=1 b="bar" ƒ=2h3s r="esc\t" d x=sf   `)
 
 	type T struct {
 		k string
@@ -19,7 +19,7 @@ func TestScannerSimple(t *testing.T) {
 		{"ƒ", "2h3s"},
 		{"r", "esc\t"},
 		{"d", ""},
-		{"x", ""},
+		{"x", "sf"},
 	}
 
 	var got []T
@@ -31,6 +31,6 @@ func TestScannerSimple(t *testing.T) {
 	gotoScanner(data, HandlerFunc(h))
 
 	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want %v, got %v", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
