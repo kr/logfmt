@@ -1,7 +1,6 @@
 package logfmt
 
 import (
-	"io"
 	"reflect"
 	"testing"
 )
@@ -48,8 +47,8 @@ func TestScannerSimple(t *testing.T) {
 	var called bool
 	h := func(key, val []byte) error { called = true; return nil }
 	err := gotoScanner([]byte(`foo="b`), HandlerFunc(h))
-	if err != io.ErrUnexpectedEOF {
-		t.Errorf("want %v, got %v", io.ErrUnexpectedEOF, err)
+	if err != ErrUnterminatedString {
+		t.Errorf("want %v, got %v", ErrUnterminatedString, err)
 	}
 	if called {
 		t.Error("did not expect call to handler")

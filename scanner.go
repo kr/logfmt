@@ -1,9 +1,11 @@
 package logfmt
 
 import (
+	"errors"
 	"fmt"
-	"io"
 )
+
+var ErrUnterminatedString = errors.New("logfmt: unterminated string")
 
 func gotoScanner(data []byte, h Handler) (err error) {
 	saveError := func(e error) {
@@ -116,7 +118,7 @@ qvalue:
 	if i >= len(data) {
 		if m >= 0 {
 			val = data[m:i]
-			saveError(io.ErrUnexpectedEOF)
+			saveError(ErrUnterminatedString)
 		}
 		return
 	}
