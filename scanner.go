@@ -117,7 +117,6 @@ ivalue:
 qvalue:
 	if i >= len(data) {
 		if m >= 0 {
-			val = data[m:i]
 			saveError(ErrUnterminatedString)
 		}
 		return
