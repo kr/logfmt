@@ -54,3 +54,14 @@ func TestScannerSimple(t *testing.T) {
 		t.Error("did not expect call to handler")
 	}
 }
+
+func TestScannerAllocs(t *testing.T) {
+	data := []byte(`a=1 b="bar" ƒ=2h3s r="esc\t" d x=sf   `)
+	h := func(key, val []byte) error { return nil }
+	allocs := testing.AllocsPerRun(1000, func() {
+		gotoScanner(data, HandlerFunc(h))
+	})
+	if allocs > 1 {
+		t.Errorf("got %f, want <=1", allocs)
+	}
+}
