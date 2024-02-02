@@ -30,6 +30,9 @@ func TestScannerSimple(t *testing.T) {
 		{`y=`, []T{{"y", ""}}},
 		{`y`, []T{{"y", ""}}},
 		{`y=f`, []T{{"y", "f"}}},
+		// test for input with escaped quotes and newlines
+		{`y="* This is a \"TEST\"
+* This is another \"TEST\""`, []T{{"y", "* This is a \"TEST\"\n* This is another \"TEST\""}}},
 	}
 
 	for _, test := range tests {

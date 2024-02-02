@@ -128,10 +128,6 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 				w += utf8.EncodeRune(b[w:], rr)
 			}
 
-		// Quote, control characters are invalid.
-		case c == '"', c < ' ':
-			return
-
 		// ASCII
 		case c < utf8.RuneSelf:
 			b[w] = c
